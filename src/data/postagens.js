@@ -28,8 +28,6 @@ export const postagens = ref([
    imagem: "" , 
    salvou: false,
    salvos: 0
-
-
  },
  {
    id: 3,
