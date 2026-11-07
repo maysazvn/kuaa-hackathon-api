@@ -2,6 +2,7 @@
 
 import { ref, onMounted } from 'vue'
 import ButtonChild from '@/components/ButtonChild.vue'
+import {router, useRouter} from '@/router'
 import { userReal } from './login/UserReal'
 import { emailReal } from './login/EmailReal'
 import { senhaReal } from './login/SenhaReal'
@@ -53,7 +54,7 @@ function selecionarCadastro() {
   }
 }
 
-function enviar(email, senha, user) {
+ async function enviar(email, senha, user) {
   if (email.trim() !== '' && senha.trim() !== '' && user.trim() !== '') {
     if(emailFalso.value.includes(`@`) && emailFalso.value.includes('.com' || '.br' || '.ifc' || '.edu')) {
 
@@ -62,6 +63,11 @@ function enviar(email, senha, user) {
       emailReal.value = email
       userReal.value = user
       senhaReal.value = senha
+
+      novoLogin.value.nomeUser = user
+        novoLogin.value.email = email
+        novoLogin.value.senha = senha
+      await salvarNaApi()
 
       localStorage.setItem('user_email', email)
       localStorage.setItem('user_nome', user)
@@ -111,6 +117,35 @@ function logar(email, senha) {
     alert('Erro! Senha ou/e usuário inválido!')
   }
 }
+
+
+//////////////////////////////////// FUNCTIONS PARA A API ////////////////////////////
+
+const API_URL = 'http://localhost:3000';
+
+const novoLogin = ref({
+  nomeUser: '',
+  email: '',
+  id: '',
+});
+
+async function salvarNaApi() {
+  try {
+    await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(novoLogin.value),
+    })
+  } catch (error) {
+    console.error('Erro ao salvar na API:', error)
+  }
+}
+
+
+
+
 </script>
 
 <template>
@@ -150,7 +185,7 @@ function logar(email, senha) {
         <input type="email" name="email" placeholder="E-mail" required v-model="emailFalso" pattern=".*@.*"/>
         <input type="text" required v-model="userFalso" placeholder="Nome de usuário" />
         <input type="password" required v-model="senhaFalsa" placeholder="Senha" />
-        <ButtonChild @clique="enviar(emailFalso, senhaFalsa, userFalso)" class="botaoLog"
+        <ButtonChild @clique="enviar(emailFalso, senhaFalsa, userFalso)"  class="botaoLog"
           >Cadastrar</ButtonChild
         >
       </div>
