@@ -16,28 +16,46 @@ const usuario = ref(null);
 const carregando = ref(true);
 const estaseguindo = ref(false);
 
+const anotacaoId = ref(null);
+const anotacao = ref('');
+
+
 async function carregarUsuario() {
   carregando.value = true;
 
   try {
-    const resposta = await fetch(`${API_URL}/users/${route.params.id}`);
-
-    if (!resposta.ok) {
+    const respostaUser = await fetch(`${API_URL}/users/${route.params.id}`);
+    if (!respostaUser.ok) {
       throw new Error('Usuário não encontrado');
     }
+    usuario.value = await respostaUser.json();
 
-    usuario.value = await resposta.json();
+    const respostaAnot = await fetch(`${API_URL}/anotacao?userId=${usuario.value.id}`);
+    if (respostaAnot.ok) {
+      const dados = await respostaAnot.json();
 
-    const salvo = localStorage.getItem(`seguindo_${usuario.value.id}`);
-    estaseguindo.value = salvo === 'true';
+      if (dados && dados.length > 0) {
+        anotacao.value = dados[0].texto;
+        anotacaoId.value = dados[0].id;
+      } else {
+        anotacao.value = '';
+        anotacaoId.value = null;
+      }
+    }
+
+
+    const respostaSeguidores = await fetch(`${API_URL}/users/${usuario.value.id}`);
+    const dadosAtualizados = await respostaSeguidores.json();
+    usuario.value.seguidores = dadosAtualizados.seguidores;
 
   } catch (error) {
-    console.error('Erro ao carregar usuário:', error);
+    console.error('Erro ao carregar os dados:', error);
     usuario.value = null;
   } finally {
     carregando.value = false;
   }
 }
+
 onMounted(() => {
   carregarUsuario();
 });
@@ -50,50 +68,28 @@ const postsUsuario = computed(() => {
 
 const mensagemSeguir = computed(() => (estaseguindo.value ? 'Seguindo' : 'Seguir'));
 
-
-
 async function seguir() {
   if (loginOut.value !== 'ativo') {
     alert('Faça login para seguir!');
     return;
   }
-
   if (!usuario.value) return;
 
   try {
     const novoEstado = !estaseguindo.value;
-
-    const novosSeguidores = novoEstado
-      ? usuario.value.seguidores + 1
-      : usuario.value.seguidores - 1;
-
+    const novosSeguidores = novoEstado ? usuario.value.seguidores + 1 : usuario.value.seguidores - 1;
 
     const resposta = await fetch(`${API_URL}/users/${usuario.value.id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        seguidores: novosSeguidores
-      })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seguidores: novosSeguidores })
     });
 
-    if (!resposta.ok) {
-      throw new Error('Não foi possível atualizar os seguidores');
-    }
+    if (!resposta.ok) throw new Error('Não foi possível atualizar os seguidores');
 
     usuario.value = await resposta.json();
-
     estaseguindo.value = novoEstado;
-
     seguindo.value += novoEstado ? 1 : -1;
-
-    localStorage.setItem(
-      `seguindo_${usuario.value.id}`,
-      String(estaseguindo.value)
-    );
-
-    localStorage.setItem('total_seguindo', seguindo.value);
 
   } catch (error) {
     console.error('Erro ao atualizar seguidores:', error);
@@ -101,7 +97,73 @@ async function seguir() {
   }
 }
 
+
+async function salvarAnotacao() {
+  if (!usuario.value) return;
+
+  try {
+    let url = `${API_URL}/anotacao`;
+    let metodo = 'POST';
+    let corpo = {
+      userId: usuario.value.id,
+      texto: anotacao.value
+    };
+
+
+    if (anotacaoId.value) {
+      url = `${API_URL}/anotacao/${anotacaoId.value}`;
+      metodo = 'PUT';
+    }
+
+    const resposta = await fetch(url, {
+      method: metodo,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(corpo)
+    });
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível processar a requisição de anotação.');
+    }
+
+    const dadoSalvo = await resposta.json();
+    anotacaoId.value = dadoSalvo.id;
+
+  } catch (error) {
+    console.error('Erro ao submeter anotação:', error);
+    alert('Erro ao salvar a anotação!');
+  }
+}
+
+
+async function limparAnotacao() {
+  if (!anotacaoId.value) {
+    anotacao.value = '';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`${API_URL}/anotacao/${anotacaoId.value}`, {
+      method: 'DELETE'
+    });
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível deletar o registro.');
+    }
+
+
+    anotacao.value = '';
+    anotacaoId.value = null;
+
+  } catch (error) {
+    console.error('Erro ao deletar anotação:', error);
+    alert('Erro ao limpar a anotação!');
+  }
+}
+
 </script>
+
 
 <template>
 
@@ -110,12 +172,24 @@ async function seguir() {
       <img v-if="usuario.banner" :src="usuario.banner" class="banner" />
       <img v-if="usuario.pfp" :src="usuario.pfp" class="foto" />
 
-   
+        <div class="campo-anotacao">
+          <textarea
+            v-model="anotacao"
+            class="descricao"
+            placeholder="Essa pessoa é..."
+            maxlength="100"
+          ></textarea>
+          <span class="contador">{{ anotacao ? anotacao.length : 0 }}/100</span>
+          <button @click="limparAnotacao">Limpar</button>
+          <button @click="salvarAnotacao">Salvar</button>
+        </div>
 
 
       <div class="acoesPerfil">
         <button class="seguirUsuario" v-on:click="seguir()">{{ mensagemSeguir }}</button>
       </div>
+
+      
 
      
      
@@ -365,5 +439,15 @@ hr{
     padding: 10px 15px;
   }
 
+}
+
+.campo-anotacao{
+position: absolute;
+  top: 130px;
+  left: 155px;
+  z-index: 20;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
 }
 </style>

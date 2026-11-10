@@ -3,6 +3,18 @@
   "postagens": [],
   "salas": [],
   "salasUsuario": [],
+  "anotacao": [
+    {
+      "userId": "2",
+      "texto": "srtaffsda",
+      "id": "hLlo6X3H--Q"
+    },
+    {
+      "userId": "2",
+      "texto": "rtgedh",
+      "id": "ER4RyrJD2Gw"
+    }
+  ],
   "users": [
     {
       "id": "1",
