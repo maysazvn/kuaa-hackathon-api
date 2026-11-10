@@ -8,6 +8,7 @@ import { pegarIDUsuario } from '@/views/account/login/UserReal'
 import { users } from './user/Users'
 import { salas } from '@/data/salas'
 
+const API_URL = 'http://localhost:3000'; 
 
 function usuarioEstaNaSala(salaIdDoPost) {
   for (let sala of salasUsuario.value) {
@@ -43,7 +44,7 @@ const postsTimeline = computed(() => {
 const conteudoRapido = ref('')
 const salaSelecionada = ref(null)
 
-function criarPostRapido() {
+async function criarPostRapido() {
   if (!conteudoRapido.value.trim()) {
     alert('Escreva algo antes de postar!')
   }
@@ -62,6 +63,14 @@ function criarPostRapido() {
     salvos: 0,
   }
 
+ await fetch(`${API_URL}/postagens`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(novoPost),
+    })
+
   postagens.value.unshift(novoPost)
   localStorage.setItem('postagens', JSON.stringify(postagens.value))
 
@@ -72,6 +81,7 @@ function criarPostRapido() {
 const salasVisiveis = computed(() =>
   salasUsuario.value.filter(s => salas.value.some(x => x.idSala === s.idSala))
 )
+
 </script>
 
 <template>

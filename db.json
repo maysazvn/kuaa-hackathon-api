@@ -1,11 +1,79 @@
 {
-  "comentariosReais":[],
-  "postagens":[],
-  "salas":[],
-  "salasUsuario":[],
-  "users":[],
-  "login":[],
-
-
+  "comentariosReais": [],
+  "postagens": [
+    {
+      "titulo": "",
+      "conteudo": "teste n6",
+      "autorID": 34,
+      "data": "10/11/2026",
+      "id": "iA_buRprYms",
+      "salaId": 1,
+      "curtidas": 0,
+      "salvos": 0
+    },
+    {
+      "titulo": "",
+      "conteudo": "teste n7",
+      "autorID": 34,
+      "data": "10/11/2026",
+      "id": "MEwueoo0SWI",
+      "salaId": 1,
+      "curtidas": 0,
+      "salvos": 0
+    },
+    {
+      "titulo": "",
+      "conteudo": "teste n8",
+      "autorID": 34,
+      "data": "10/11/2026",
+      "id": "nPT6IZU_n38",
+      "salaId": 1,
+      "curtidas": 0,
+      "salvos": 0
+    },
+    {
+      "titulo": "",
+      "conteudo": "a",
+      "autorID": 34,
+      "data": "10/11/2026",
+      "id": "wtBH38Cm0oM",
+      "salaId": 1,
+      "curtidas": 0,
+      "salvos": 0
+    },
+    {
+      "id": "rBRsOpFlxnY"
+    },
+    {
+      "id": "N0hUHc5ypHE"
+    },
+    {
+      "titulo": "",
+      "conteudo": "editar",
+      "autorID": 34,
+      "data": "10/11/2026",
+      "id": "spXzhZAbYiQ",
+      "salaId": 1,
+      "curtidas": 0,
+      "salvos": 0
+    }
+  ],
+  "salas": [],
+  "salasUsuario": [],
+  "users": [],
+  "login": [
+    {
+      "nomeUser": "a",
+      "email": "a@gmail.com",
+      "id": "nYUWXAlrL-A",
+      "senha": "a"
+    },
+    {
+      "nomeUser": "a",
+      "email": "a@gmail.com",
+      "id": "epqZHFbxJ4g",
+      "senha": "a"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
