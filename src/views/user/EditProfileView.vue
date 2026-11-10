@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
+import { GoToSymbol } from 'vuetify/lib/composables/goto.mjs'
 
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
@@ -29,18 +30,7 @@ async function carregarPerfil() {
 }
 
 async function atualizarPerfil() {
-  try {
-    await fetch(`${API_URL}/users/${usuario.value.id}`, {
-      method: 'PUT', // ou PATCH
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(usuario.value),
-    })
-
-    alert('Perfil atualizado com sucesso!')
-    router.push('/profile')
-  } catch (error) {
+  try {GoToSymbol} catch (error) {
     console.error('Erro ao atualizar:', error)
   }
 }
@@ -95,7 +85,7 @@ onMounted(carregarPerfil)
     </form>
 
     <div>
-      <ButtonChild @clique="excluirUser" class="btn btn-danger">
+      <ButtonChild @clique="$emit(excluirUser())" class="btn btn-danger">
         Excluir Usuário
       </ButtonChild>
     </div>

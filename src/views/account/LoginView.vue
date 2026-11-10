@@ -2,11 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
-import { userReal } from './login/UserReal'
-import { emailReal } from './login/EmailReal'
-import { senhaReal } from './login/SenhaReal'
+
 import { loginOut } from './login/Loginout'
 import { users } from '../user/Users'
+import { formatNumber } from 'vuetify/lib/components/VNumberInput/format.mjs'
 
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
@@ -19,6 +18,9 @@ const formulario = ref({
   nome: '',
   senha: ''
 })
+const emailReal = ref(null)
+const senhaReal = ref(null)
+const userReal = ref(null)
 
 onMounted(() => {
   const emailSalvo = localStorage.getItem('user_email')
@@ -74,6 +76,13 @@ async function cadastrarUsuario() {
       localStorage.setItem('user_senha', formulario.value.senha)
       
       alert('Cadastro realizado com sucesso! Faça login.')
+      emailReal.value = formulario.value.email;
+      senhaReal.value = formulario.value.senha;
+      userReal.value = formulario.value.user;
+      formulario.value.senha = '';
+      formulario.value.nome = '';
+      formulario.value.email = '';
+      
       selecionarLogin()
     }
   } catch (error) {

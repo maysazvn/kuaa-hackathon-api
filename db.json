@@ -1,11 +1,21 @@
 {
-  "comentariosReais":[],
-  "postagens":[],
-  "salas":[],
-  "salasUsuario":[],
-  "users":[],
-  "login":[],
-
-
+  "comentariosReais": [],
+  "postagens": [],
+  "salas": [],
+  "salasUsuario": [],
+  "users": [
+    {
+      "nome": "a",
+      "email": "a@gmail.com",
+      "senha": "a",
+      "pfp": "/pfpPlaceholder.png",
+      "banner": "/bannerPlaceholder.png",
+      "desc": "",
+      "mostrarSala": "sim",
+      "salas": [],
+      "id": "vIaX7eQ_kb4"
+    }
+  ],
+  "login": [],
   "$schema": "./node_modules/json-server/schema.json"
 }
