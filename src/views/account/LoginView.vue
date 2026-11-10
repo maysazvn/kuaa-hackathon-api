@@ -1,24 +1,24 @@
 <script setup>
-
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
-// import { router } from '@/router'
 import { userReal } from './login/UserReal'
 import { emailReal } from './login/EmailReal'
 import { senhaReal } from './login/SenhaReal'
 import { loginOut } from './login/Loginout'
 import { users } from '../user/Users'
 
-// lets ////////
+const router = useRouter()
+const API_URL = 'http://localhost:3000'
 
 let cadastro = ref(true)
 let login = ref(false)
-let emailFalso = ref('')
-let userFalso = ref('')
-let senhaFalsa = ref('')
-let maiorId = Math.max(...users.map((item) => item.id))
-const desc = ref(localStorage.getItem('desc') || '')
-const mostrarSala = ref(localStorage.getItem('mostrarSala?') || 'sim')
+
+const formulario = ref({
+  email: '',
+  nome: '',
+  senha: ''
+})
 
 onMounted(() => {
   const emailSalvo = localStorage.getItem('user_email')
@@ -39,162 +39,108 @@ onMounted(() => {
   }
 })
 
-// Functions /////
-
 function selecionarLogin() {
-  if (cadastro.value == true) {
-    cadastro.value = false
-    login.value = true
-  }
+  cadastro.value = false
+  login.value = true
 }
+
 function selecionarCadastro() {
-  if (login.value == true) {
-    login.value = false
-    cadastro.value = true
-  }
+  login.value = false
+  cadastro.value = true
 }
 
- async function enviar(email, senha, user) {
-  if (email.trim() !== '' && senha.trim() !== '' && user.trim() !== '') {
-    if(emailFalso.value.includes(`@`) && emailFalso.value.includes('.com' || '.br' || '.ifc' || '.edu')) {
-
-    
-    if (senhaReal.value.length == 0 && emailReal.value.length == 0 && userReal.value.length == 0) {
-      emailReal.value = email
-      userReal.value = user
-      senhaReal.value = senha
-
-      novoLogin.value.nomeUser = user
-        novoLogin.value.email = email
-        novoLogin.value.senha = senha
-      await salvarNaApi()
-
-      localStorage.setItem('user_email', email)
-      localStorage.setItem('user_nome', user)
-      localStorage.setItem('user_senha', senha)
-
-      emailFalso.value = ''
-      senhaFalsa.value = ''
-      userFalso.value = ''
-
-       const novoUsuario = {
-  id: maiorId + 1,
-  nome: userReal.value,
-  pfp: localStorage.getItem('urlFoto') || '/pfpPlaceholder.png',
-  banner: localStorage.getItem('urlBanner') || '/bannerPlaceholder.png',
-  desc: desc.value,
-  mostrarSala: mostrarSala.value,
-  salas: [],
-      
-}
-    
-
-      users.push(novoUsuario);
-      localStorage.setItem('usuarios_cadastrados', JSON.stringify(users.filter(u => u.id > 30)));
-
-      alert('Cadastro realizado com sucesso! Vá para a aba Login.')
-    } else {
-      alert('Você já possui cadastro! Faça login!')
-    }
-  }else{
-    alert('Coloque um email válido!')
-  }
-  } else {
-    alert('Preencha todos os campos!')
-  }
-}
-
-function logar(email, senha) {
-  if (email === emailReal.value && senha === senhaReal.value) {
-    loginOut.value = 'ativo'
-
-    localStorage.setItem('login_status', 'ativo')
-
-    alert('Você logou com sucesso!')
-    senhaFalsa.value = ''
-    emailFalso.value = ''
-  } else {
-    alert('Erro! Senha ou/e usuário inválido!')
-  }
-}
-
-
-//////////////////////////////////// FUNCTIONS PARA A API ////////////////////////////
-
-const API_URL = 'http://localhost:3000';
-
-const novoLogin = ref({
-  nomeUser: '',
-  email: '',
-  id: '',
-});
-
-async function salvarNaApi() {
+async function cadastrarUsuario() {
   try {
-    await fetch(`${API_URL}/login`, {
+    const resposta = await fetch(`${API_URL}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(novoLogin.value),
+      body: JSON.stringify({
+        nome: formulario.value.nome,
+        email: formulario.value.email,
+        senha: formulario.value.senha,
+        pfp: '/pfpPlaceholder.png',
+        banner: '/bannerPlaceholder.png',
+        desc: '',
+        mostrarSala: 'sim',
+        salas: []
+      }),
     })
+
+    if (resposta.ok) {
+      localStorage.setItem('user_email', formulario.value.email)
+      localStorage.setItem('user_nome', formulario.value.nome)
+      localStorage.setItem('user_senha', formulario.value.senha)
+      
+      alert('Cadastro realizado com sucesso! Faça login.')
+      selecionarLogin()
+    }
   } catch (error) {
-    console.error('Erro ao salvar na API:', error)
+    console.error('Erro ao cadastrar:', error)
   }
 }
 
+async function logarUsuario() {
+  try {
+    const resposta = await fetch(`${API_URL}/users`)
+    const listaUsuarios = await resposta.json()
 
+    const usuarioEncontrado = listaUsuarios.find(
+      (u) => u.email === formulario.value.email && u.senha === formulario.value.senha
+    )
 
-
+    if (usuarioEncontrado) {
+      loginOut.value = 'ativo'
+      localStorage.setItem('login_status', 'ativo')
+      localStorage.setItem('user_nome', usuarioEncontrado.nome)
+      localStorage.setItem('user_email', usuarioEncontrado.email)
+      
+      alert('Você logou com sucesso!')
+      router.push('/profile') // Redireciona para o perfil
+    } else {
+      alert('Erro! E-mail ou senha inválidos!')
+    }
+  } catch (error) {
+    console.error('Erro ao fazer login:', error)
+  }
+}
 </script>
 
 <template>
   <div class="container">
-    <!-- essa ^ div é a geral que contem TUDO -->
     <div class="bemVindo">
-      <!-- essa ^ tem o texto de bem vindo e a imagem do kuaa -->
       <img src="../../../public/kuaa.png" alt="Kuaa Logo" />
-      <p v-if="cadastro == true">
+      <p v-if="cadastro">
         <span>Bem-vindo ao KUAA</span>
-        O KUAA veio para ajudar você, estudante, a ter um desempenho melhor em seus estudos, provas
-        e até mesmo fazer amigos novos!
+        O KUAA veio para ajudar você, estudante, a ter um desempenho melhor em seus estudos!
       </p>
-      <p v-if="login == true">
+      <p v-if="login">
         <span>Bem-vindo de volta ao KUAA</span>
-        O KUAA veio para ajudar você, estudante, a ter um desempenho melhor em seus estudos, provas
-        e até mesmo fazer amigos novos!
+        Que bom te ver de novo por aqui!
       </p>
     </div>
+
     <div class="direita">
       <div class="escolha">
-        <!-- essa ^ tem os botoes para alterar o login e cadastro -->
-        <ButtonChild
-          @clique="selecionarCadastro()"
-          :class="{ inativo: !cadastro }"
-          class="botaoCadastro"
-          >Cadastro</ButtonChild
-        >
-        <ButtonChild @clique="selecionarLogin()" :class="{ inativo: !login }" class="botaoLogin"
-          >Login</ButtonChild
-        >
+        <ButtonChild @clique="selecionarCadastro()" :class="{ inativo: !cadastro }" class="botaoCadastro">Cadastro</ButtonChild>
+        <ButtonChild @clique="selecionarLogin()" :class="{ inativo: !login }" class="botaoLogin">Login</ButtonChild>
       </div>
 
-      <div class="cadastro" v-show="cadastro == true">
-        <!-- essa ^ é a div que aparece quando você esta fazendo cadastro -->
-        <label for="email"></label>
-        <input type="email" name="email" placeholder="E-mail" required v-model="emailFalso" pattern=".*@.*"/>
-        <input type="text" required v-model="userFalso" placeholder="Nome de usuário" />
-        <input type="password" required v-model="senhaFalsa" placeholder="Senha" />
-        <ButtonChild @clique="enviar(emailFalso, senhaFalsa, userFalso)"  class="botaoLog"
-          >Cadastrar</ButtonChild
-        >
-      </div>
-      <div class="login" v-show="login == true">
-        <!-- essa é a div ^ que aparece para fazer login -->
-        <input type="email" name="email" placeholder="E-mail" required v-model="emailFalso" />
-        <input type="password" required v-model="senhaFalsa" placeholder="Senha" />
-        <ButtonChild @clique="logar(emailFalso, senhaFalsa)" class="botaoLog"> Logar </ButtonChild>
-      </div>
+      <!-- Formulário de Cadastro -->
+      <form class="cadastro" v-show="cadastro" @submit.prevent="cadastrarUsuario">
+        <input type="email" placeholder="E-mail" required v-model="formulario.email" />
+        <input type="text" placeholder="Nome de usuário" required v-model="formulario.nome" />
+        <input type="password" placeholder="Senha" required v-model="formulario.senha" />
+        <button type="submit" class="botaoLog">Cadastrar</button>
+      </form>
+
+      <!-- Formulário de Login -->
+      <form class="login" v-show="login" @submit.prevent="logarUsuario">
+        <input type="email" placeholder="E-mail" required v-model="formulario.email" />
+        <input type="password" placeholder="Senha" required v-model="formulario.senha" />
+        <button type="submit" class="botaoLog">Logar</button>
+      </form>
     </div>
   </div>
 </template>

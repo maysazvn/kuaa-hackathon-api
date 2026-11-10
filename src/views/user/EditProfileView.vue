@@ -1,182 +1,104 @@
 <script setup>
-import { ref, watch } from 'vue'
-import { users } from '@/views/user/Users'
-import { pegarIDUsuario, userReal } from '@/views/account/login/UserReal'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
 
-// import { onMounted, ref } from 'vue';
-// nome usuario é o que vc quer mudar André
+const router = useRouter()
+const API_URL = 'http://localhost:3000'
 
-
-const meuid = pegarIDUsuario()
-
-function sincronizarUsuarioGlobal(campo, valor) {
-  const usuarioMemoria = users.find((u) => Number(u.id) === Number(meuid))
-  if (usuarioMemoria) {
-    usuarioMemoria[campo] = valor
-  }
-  const usuariosSalvos = JSON.parse(localStorage.getItem('usuarios_cadastrados') || '[]')
-  const usuarioSalvo = usuariosSalvos.find((u) => Number(u.id) === Number(meuid))
-
-  if (usuarioSalvo) {
-    usuarioSalvo[campo] = valor
-    localStorage.setItem('usuarios_cadastrados', JSON.stringify(usuariosSalvos))
-  }
-}
-
-const nomeUsuario = ref(localStorage.getItem('user_nome') || '')
-const desc = ref(localStorage.getItem('desc') || '')
-
-watch(nomeUsuario, (novoNome) => {
-  localStorage.setItem('user_nome', novoNome)
-  sincronizarUsuarioGlobal('nome', novoNome)
+const usuario = ref({
+  id: '',
+  nome: '',
+  desc: '',
+  mostrarSala: 'sim',
+  pfp: '/pfpPlaceholder.png',
+  banner: '/bannerPlaceholder.png'
 })
 
-watch(desc, (novaDesc) => {
-  localStorage.setItem('desc', novaDesc)
-  sincronizarUsuarioGlobal('desc', novaDesc)
-})
-
-const urlFoto = ref(localStorage.getItem('urlFoto') || '/pfpPlaceholder.png')
-const urlBanner = ref(localStorage.getItem('urlBanner') || '/bannerPlaceholder.png')
-
-let novaFoto = ref(null)
-let novoBanner = ref(null)
-
-function mudarFoto(event) {
-  novaFoto.value = event.target.files[0]
-
-  if (novaFoto.value) {
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      urlFoto.value = reader.result
-      localStorage.setItem('urlFoto', reader.result)
-      sincronizarUsuarioGlobal('pfp', reader.result) 
+// Simulando a busca do usuário logado (ajuste conforme o ID salvo no login)
+async function carregarPerfil() {
+  try {
+    const idLogado = localStorage.getItem('user_id') || 1 // Exemplo
+    const resposta = await fetch(`${API_URL}/users/${idLogado}`)
+    if (resposta.ok) {
+      usuario.value = await resposta.json()
     }
-
-    reader.readAsDataURL(novaFoto.value)
+  } catch (error) {
+    console.error('Erro ao carregar perfil:', error)
   }
 }
 
-function mudarBanner(event) {
-  novoBanner.value = event.target.files[0]
+async function atualizarPerfil() {
+  try {
+    await fetch(`${API_URL}/users/${usuario.value.id}`, {
+      method: 'PUT', // ou PATCH
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(usuario.value),
+    })
 
-  if (novoBanner.value) {
-    const reader = new FileReader()
+    alert('Perfil atualizado com sucesso!')
+    router.push('/profile')
+  } catch (error) {
+    console.error('Erro ao atualizar:', error)
+  }
+}
 
-    reader.onload = () => {
-      urlBanner.value = reader.result
-      localStorage.setItem('urlBanner', reader.result)
-      sincronizarUsuarioGlobal('banner', reader.result)
+async function excluirUser() {
+  if (confirm('Tem certeza que deseja excluir sua conta?')) {
+    try {
+      await fetch(`${API_URL}/users/${usuario.value.id}`, {
+        method: 'DELETE',
+      })
+      
+      localStorage.clear()
+      alert('Conta excluída com sucesso.')
+      router.push('/')
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error)
     }
-
-    reader.readAsDataURL(novoBanner.value)
   }
 }
 
-const mostrarSala = ref(localStorage.getItem('mostrarSala?') || 'sim')
-
-watch(mostrarSala, (novoValor) => {
-  localStorage.setItem('mostrarSala?', novoValor)
-  sincronizarUsuarioGlobal('mostrarSala', novoValor)
-})
-
-// APIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
-
-
-const API_URL = 'http://localhost:3000';
-
-async function excluirUser(id) {
-   await fetch(`${API_URL}/user/${id}`,{
-            method: 'DELETE',
-        });
-}
-
-async function pegarIDUsuario(){
-  const idUser = fetch(`${API_URL}/usuario/${userNomeReal.value}`)
-}
-
+onMounted(carregarPerfil)
 </script>
 
 <template>
   <div class="container">
-    <div class="cartaoPerfil">
-      <div class="adicionarFotoBanner">
-        <label for="fotoDeBanner" class="label-banner">
-          <img class="previewBanner" :src="urlBanner" alt="Preview" v-if="urlBanner" />
-          <span class="icone-lapis-banner"><font-awesome-icon icon="pen" /></span>
-        </label>
-
-        <input
-          type="file"
-          id="fotoDeBanner"
-          class="fotoBanner"
-          @change="mudarBanner"
-          accept="image/*"
-        />
-      </div>
-
-      <div class="adicionarFotoPerfil">
-        <label for="fotoDePerfil" class="label-foto">
-          <img class="previewFoto" :src="urlFoto" alt="Preview" v-if="urlFoto" />
-          <span class="icone-lapis-foto"><font-awesome-icon icon="pen" /></span>
-        </label>
-        <input
-          type="file"
-          id="fotoDePerfil"
-          class="fotoPerfil"
-          @change="mudarFoto"
-          accept="image/*"
-        />
-      </div>
-
+    <form class="cartaoPerfil" @submit.prevent="atualizarPerfil">
       <div class="campos">
         <div class="campo-grupo">
           <label>Nome de usuário</label>
-          <input
-            v-model="nomeUsuario"
-            class="nomeUsuario"
-            placeholder="Nome de usuário"
-            maxlength="25"
-          />
-          <span class="contador">{{ nomeUsuario ? nomeUsuario.length : 0 }}/25</span>
+          <input v-model="usuario.nome" placeholder="Nome de usuário" maxlength="25" required />
         </div>
+
         <div class="campo-grupo">
-          <label> Descrição </label>
-          <textarea
-            v-model="desc"
-            class="descricao"
-            placeholder="Escreva sobre você..."
-            maxlength="300"
-          ></textarea>
-          <span class="contador">{{ desc ? desc.length : 0 }}/300</span>
+          <label>Descrição</label>
+          <textarea v-model="usuario.desc" placeholder="Escreva sobre você..." maxlength="300"></textarea>
         </div>
 
         <div class="campo-grupo">
           <label>Mostrar Salas?</label>
           <div class="radios">
-            <div class="sim">
-              <input type="radio" name="mostrarSala?" value="sim" id="yes" v-model="mostrarSala" />
-              <label for="yes">Sim</label>
-            </div>
-            <div class="nao">
-              <input type="radio" name="mostrarSala?" value="nao" id="no" v-model="mostrarSala" />
-              <label for="no">Não</label>
-            </div>
+            <input type="radio" value="sim" id="yes" v-model="usuario.mostrarSala" />
+            <label for="yes">Sim</label>
+            <input type="radio" value="nao" id="no" v-model="usuario.mostrarSala" />
+            <label for="no">Não</label>
           </div>
         </div>
       </div>
 
-      <router-link to="/profile">
-        <button>Confirmar</button>
-      </router-link>
+      <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Confirmar</button>
+      </div>
+    </form>
+
+    <div>
+      <ButtonChild @clique="excluirUser" class="btn btn-danger">
+        Excluir Usuário
+      </ButtonChild>
     </div>
-  </div>
-  <div>
-  <ButtonChild @clique="excluirUser()">
-    Excluir Usuário
-  </ButtonChild>
   </div>
 </template>
 
