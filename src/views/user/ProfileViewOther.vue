@@ -1,81 +1,104 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { computed } from 'vue';
-import { users } from './Users';
 import { ref } from 'vue';
-import { watchEffect } from 'vue';
-import { salas } from '@/data/salas';
 import { seguindo } from './Following';
 import { loginOut } from '../account/login/Loginout';
 import Postagens from '@/components/Postagens/Postagens.vue';
 import { postagens } from '@/data/postagens';
+import { onMounted } from 'vue';
 
 
 const route = useRoute();
+const API_URL = 'http://localhost:3000';
 
-// adicionei buscar salas
-function buscarSalasDoUsuario(idsSalas) {
-  if (!idsSalas) return [];
+const usuario = ref(null);
+const carregando = ref(true);
+const estaseguindo = ref(false);
 
-  const listaDeSalas = salas.value || salas;
-  return listaDeSalas.filter(sala => idsSalas.includes(sala.idSala));
-}
+async function carregarUsuario() {
+  carregando.value = true;
 
-const usuario = computed(() => {
-  return users.find(
-    (usuario) => usuario.id === Number(route.params.id),
-  )
-})
+  try {
+    const resposta = await fetch(`${API_URL}/users/${route.params.id}`);
 
-const postsUsuario = computed(() => {
-  return postagens.value.filter((post) => post.autorID === usuario.value.id)
-})
+    if (!resposta.ok) {
+      throw new Error('Usuário não encontrado');
+    }
 
-// const suarios = JSON.parse(localStorage.getItem('salasEntradas')) || [];
+    usuario.value = await resposta.json();
 
-// const mostrarSala = ref(localStorage.getItem('mostrarSala?') || 'sim')
-let estaseguindo = ref(false);
-
-watchEffect(() => {
-  if (usuario.value) {
     const salvo = localStorage.getItem(`seguindo_${usuario.value.id}`);
     estaseguindo.value = salvo === 'true';
+
+  } catch (error) {
+    console.error('Erro ao carregar usuário:', error);
+    usuario.value = null;
+  } finally {
+    carregando.value = false;
   }
+}
+onMounted(() => {
+  carregarUsuario();
+});
+
+const postsUsuario = computed(() => {
+  if (!usuario.value) return [];
+  const listaPosts = postagens.value || postagens;
+  return listaPosts.filter((post) => post.autorID === usuario.value.id);
 });
 
 const mensagemSeguir = computed(() => (estaseguindo.value ? 'Seguindo' : 'Seguir'));
 
-function seguir() {
-  if(loginOut.value == 'ativo'){
+
+
+async function seguir() {
+  if (loginOut.value !== 'ativo') {
+    alert('Faça login para seguir!');
+    return;
+  }
+
   if (!usuario.value) return;
 
-  const segui = users.find(usu => usu.id === usuario.value.id)
+  try {
+    const novoEstado = !estaseguindo.value;
 
-  if (!estaseguindo.value) {
+    const novosSeguidores = novoEstado
+      ? usuario.value.seguidores + 1
+      : usuario.value.seguidores - 1;
 
-    estaseguindo.value = true;
-    localStorage.setItem(`seguindo_${usuario.value.id}`, 'true');
 
+    const resposta = await fetch(`${API_URL}/users/${usuario.value.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        seguidores: novosSeguidores
+      })
+    });
 
-    segui.seguidores += 1;
-    seguindo.value += 1;
+    if (!resposta.ok) {
+      throw new Error('Não foi possível atualizar os seguidores');
+    }
+
+    usuario.value = await resposta.json();
+
+    estaseguindo.value = novoEstado;
+
+    seguindo.value += novoEstado ? 1 : -1;
+
+    localStorage.setItem(
+      `seguindo_${usuario.value.id}`,
+      String(estaseguindo.value)
+    );
+
     localStorage.setItem('total_seguindo', seguindo.value);
-    console.log(seguindo)
 
-  } else {
-    estaseguindo.value = false;
-    localStorage.setItem(`seguindo_${usuario.value.id}`, 'false');
-
-
-    segui.seguidores -= 1
-    seguindo.value -= 1;
-    localStorage.setItem('total_seguindo', seguindo.value);
-    console.log(seguindo)
-
+  } catch (error) {
+    console.error('Erro ao atualizar seguidores:', error);
+    alert('Erro ao atualizar seguidores!');
   }
-}else{
-  alert('Faça login para seguir!')
-}
 }
 
 </script>
@@ -115,7 +138,7 @@ function seguir() {
 
         <div class="salas" v-show="usuario.mostrarSala === 'sim'">
         <ul class="listaSalas">
-          <li v-for="sala in buscarSalasDoUsuario(usuario.salas)" :key="sala.idSala" class="cardSala">
+         <li v-for="sala in salasDoUsuario" :key="sala.idSala" class="cardSala">
              <RouterLink :to="`/salas/${sala.idSala}`">
               <span class="nomesala">{{ sala.nome }}</span>
             </RouterLink>

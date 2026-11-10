@@ -2,7 +2,7 @@
 
 import { ref, onMounted } from 'vue'
 import ButtonChild from '@/components/ButtonChild.vue'
-import {router, useRouter} from '@/router'
+// import {router, useRouter} from '@/router'
 import { userReal } from './login/UserReal'
 import { emailReal } from './login/EmailReal'
 import { senhaReal } from './login/SenhaReal'
