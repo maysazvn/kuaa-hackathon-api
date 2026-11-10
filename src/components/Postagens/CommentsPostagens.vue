@@ -7,24 +7,32 @@ import { loginOut } from '@/views/account/login/Loginout'
 
 const props = defineProps(['post', 'usuario'])
 
-let comentarios = ref([])
-
-const usuarioLogado = computed(() => pegarIDUsuario())
-const novoComent = ref('')
-const chaveStorage = `comentarios_${props.post.id}`
-
-onMounted(() => {
-  const salvos = localStorage.getItem(chaveStorage)
-
-  if (salvos) {
-    comentarios.value = JSON.parse(salvos)
-  } else {
-    comentarios.value = comentariosReais.value[props.post.id] || []
-  }
+let comentarios = ref(null)
+const novoComent = ref({
+  postId: String(props.post.id),
+  texto: '',
+  data: '',
+  autorID: '',
+  curtido: false,
+  curtidas: 0,
 })
 
+const usuarioLogado = computed(() => pegarIDUsuario())
+
+
+const API_URL= 'http://localhost:3000'
+
+async function CarregarComentarios() {
+  const respostaComentararios = await fetch(`${API_URL}/comentarios`);
+  const todosComentarios = await respostaComentararios.json();
+
+ comentarios.value = todosComentarios.filter(
+    (c) => String(c.postId) === String(props.post.id)
+  )}
+
+
 function pegarNomeAutor(autorID) {
-  const usuarioEncontrado = users.find((usu) => usu.id === autorID)
+  const usuarioEncontrado = users.find((usu) => String(usu.id) === String(autorID))
   if (usuarioEncontrado) {
     return usuarioEncontrado.nome
   } else {
@@ -33,7 +41,7 @@ function pegarNomeAutor(autorID) {
 }
 
 function pegarFotoUsuario(autorID) {
-  const usuarioEncontrado = users.find((usu) => usu.id === autorID)
+  const usuarioEncontrado = users.find((usu) => String(usu.id) === String(autorID))
   if (usuarioEncontrado) {
     return usuarioEncontrado.pfp
   } else {
@@ -41,33 +49,38 @@ function pegarFotoUsuario(autorID) {
   }
 }
 
-function comentar() {
-  if(loginOut.value == 'ativo'){
-  if (!novoComent.value.trim()) {
-    alert(`Preencha os campos!!`)
-  } else {
-    let maiorId = Math.max(...comentarios.value.map((item) => item.id))
+async function comentar() {
+  if (loginOut.value == 'ativo') {
+    if (!novoComent.value.texto.trim()) {
+      alert('Preencha os campos!!')
+    } else {
+      novoComent.value.postId = String(props.post.id)
+      novoComent.value.data = new Date().toLocaleString('pt-BR')
+      novoComent.value.autorID = String(pegarIDUsuario())
+      novoComent.value.texto = novoComent.value.texto.trim()
 
-    const novoNoComentario = {
-      texto: novoComent.value,
-      usu: usuarioLogado.value,
-      data: Date(Date.now()).toLocaleString('pt-BR'),
-      id: maiorId + 1,
-      autorID: pegarIDUsuario(),
-      curtido: false,
-      curtidas: 0
+      const resposta = await fetch(`${API_URL}/comentarios`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(novoComent.value)
+      })
+
+      const comentarioSalvo = await resposta.json()
+      comentarios.value.unshift(comentarioSalvo)
+      novoComent.value.texto = ''
     }
-
-    comentarios.value.unshift(novoNoComentario)
-
-    novoComent.value = ''
-    localStorage.setItem(chaveStorage, JSON.stringify(comentarios.value))
+  } else {
+    alert('Faça login para comentar!')
   }
-}else{
-  alert('Faça login para comentar!')
 }
-}
-function CurtidaCOemn(comentario) {
+
+
+
+
+
+async function CurtidaCOemn(comentario) {
   if (loginOut.value === 'ativo') {
     if (comentario.curtido === true) {
       comentario.curtido = false
@@ -76,33 +89,63 @@ function CurtidaCOemn(comentario) {
       comentario.curtido = true
       comentario.curtidas++
     }
-
-    localStorage.setItem(
-      chaveStorage,
-      JSON.stringify(comentarios.value)
-    )
+   await fetch(`${API_URL}/comentarios/${comentario.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        curtido: comentario.curtido,
+        curtidas: comentario.curtidas
+      })
+    })
   } else {
     alert('Faça login para curtir!')
   }
 }
 
-function excluir(idItem) {
-  comentarios.value = comentarios.value.filter((c) => c.id !== idItem)
-  localStorage.setItem(chaveStorage, JSON.stringify(comentarios.value))
-}
+async function excluir(id) {
+  const confirmarExcluir = window.confirm('Você tem certeza que deseja excluir esse comentário? essa ação não tem volta')
 
-function editar(comentario) {
-  const index = comentarios.value.findIndex((c) => c.id === comentario.id)
-
-  if (index !== -1) {
-    const edicao = prompt(`Edite o seu comentario...`, comentario.texto)
-
-    if (edicao !== null) {
-      comentarios.value[index].texto = edicao
-      localStorage.setItem(chaveStorage, JSON.stringify(comentarios.value))
-    }
+  if (confirmarExcluir) {
+    await fetch(`${API_URL}/comentarios/${id}`, {
+      method: 'DELETE'
+    });
+    await CarregarComentarios()
   }
 }
+
+async function editar(comentario) {
+  const edicao = prompt(`Edite o seu comentário`, comentario.texto)
+
+  if (edicao !== null && edicao.trim() !== '') {
+    comentario.texto = edicao
+    await fetch(`${API_URL}/comentarios/${comentario.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      }, body: JSON.stringify({
+        texto: edicao.trim()
+      })
+    })
+    comentario.texto = edicao.trim()
+  }
+}
+
+
+
+// function editar(comentario) {
+//   const index = comentarios.value.findIndex((c) => c.id === comentario.id)
+
+//   if (index !== -1) {
+//     const edicao = prompt(`Edite o seu comentario...`, comentario.texto)
+
+//     if (edicao !== null) {
+//       comentarios.value[index].texto = edicao
+//       localStorage.setItem(chaveStorage, JSON.stringify(comentarios.value))
+//     }
+//   }
+// }
 // ////
 
 function mostrarItens(comentario) {
@@ -115,22 +158,28 @@ function denunciar() {
   }else{
     alert('Faça login para denunciar!')
   }
-  
 }
+
+
+onMounted(() => {
+  CarregarComentarios()
+})
+
+
 </script>
 <template>
   <section>
     <div class="comentarios">
       <div class="comentar">
-        <textarea placeholder="O que está pensando?" v-bind="texto" v-model="novoComent"></textarea>
+        <textarea placeholder="O que está pensando?" v-model="novoComent.texto"></textarea>
       </div>
       <!-- aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii -->
-    
-        <button type="submit" @click="comentar()" class="comentarBtn">Comentar</button>
-     
-      
 
-       
+        <button type="submit" @click="comentar()" class="comentarBtn">Comentar</button>
+
+
+
+
       <div class="todos" v-for="comentario in comentarios" :key="comentario.id">
         <div class="cima">
           <p class="autor">
@@ -146,7 +195,7 @@ function denunciar() {
           <button class="editarDeletar" v-on:click="mostrarItens(comentario)">•••</button>
 
           <div class="vshow" v-show="comentario.aberto">
-            <div v-if="comentario.autorID === usuarioLogado" class="btnsEditarDeletar">
+            <div v-if="String(comentario.autorID) === String(usuarioLogado)" class="btnsEditarDeletar">
               <button @click="editar(comentario)" class="editar">Editar</button>
               <button @click="excluir(comentario.id)" class="deletar">Excluir</button>
             </div>
@@ -154,7 +203,7 @@ function denunciar() {
 
             <div v-else>
               <button @click="denunciar()" class="denunciar">Denunciar</button>
-            
+
             </div>
           </div>
         </div>
@@ -162,10 +211,10 @@ function denunciar() {
 
         <div class="interacao">
           <div class="curtidas">
-            <button @click="CurtidaCOemn(comentario)" class="mostrarComent"><font-awesome-icon icon="heart" :style="{color: comentario.curtido ? 'red' : 'grey'}" /></button>
+            <button @click="CurtidaCOemn(comentario)" class="mostrarComent"><font-awesome-icon icon="heart" :style="{color: comentario.curtido ? 'red' : 'grey'}" /> <span>{{ comentario.curtidas }}</span></button>
           </div>
 
-      
+
         </div>
       </div>
     </div>

@@ -2,7 +2,6 @@
 
 import { ref, onMounted } from 'vue'
 import ButtonChild from '@/components/ButtonChild.vue'
-import {router, useRouter} from '@/router'
 import { userReal } from './login/UserReal'
 import { emailReal } from './login/EmailReal'
 import { senhaReal } from './login/SenhaReal'
@@ -58,7 +57,7 @@ function selecionarCadastro() {
   if (email.trim() !== '' && senha.trim() !== '' && user.trim() !== '') {
     if(emailFalso.value.includes(`@`) && emailFalso.value.includes('.com' || '.br' || '.ifc' || '.edu')) {
 
-    
+
     if (senhaReal.value.length == 0 && emailReal.value.length == 0 && userReal.value.length == 0) {
       emailReal.value = email
       userReal.value = user
@@ -85,9 +84,9 @@ function selecionarCadastro() {
   desc: desc.value,
   mostrarSala: mostrarSala.value,
   salas: [],
-      
+
 }
-    
+
 
       users.push(novoUsuario);
       localStorage.setItem('usuarios_cadastrados', JSON.stringify(users.filter(u => u.id > 30)));
