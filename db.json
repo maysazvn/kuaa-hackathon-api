@@ -1,7 +1,9 @@
 {
   "comentariosReais":[],
   "postagens":[],
-  "salas":[],
+  "salas":[
+    {}
+  ],
   "salasUsuario":[],
   "users":[],
   "login":[],
