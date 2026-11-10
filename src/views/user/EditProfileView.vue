@@ -1,7 +1,12 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { users } from '@/views/user/Users'
-import { pegarIDUsuario } from '@/views/account/login/UserReal'
+import { pegarIDUsuario, userReal } from '@/views/account/login/UserReal'
+import ButtonChild from '@/components/ButtonChild.vue'
+
+// import { onMounted, ref } from 'vue';
+// nome usuario é o que vc quer mudar André
+
 
 const meuid = pegarIDUsuario()
 
@@ -76,6 +81,22 @@ watch(mostrarSala, (novoValor) => {
   localStorage.setItem('mostrarSala?', novoValor)
   sincronizarUsuarioGlobal('mostrarSala', novoValor)
 })
+
+// APIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+
+
+const API_URL = 'http://localhost:3000';
+
+async function excluirUser(id) {
+   await fetch(`${API_URL}/user/${id}`,{
+            method: 'DELETE',
+        });
+}
+
+async function pegarIDUsuario(){
+  const idUser = fetch(`${API_URL}/usuario/${userNomeReal.value}`)
+}
+
 </script>
 
 <template>
@@ -151,6 +172,11 @@ watch(mostrarSala, (novoValor) => {
         <button>Confirmar</button>
       </router-link>
     </div>
+  </div>
+  <div>
+  <ButtonChild @clique="excluirUser()">
+    Excluir Usuário
+  </ButtonChild>
   </div>
 </template>
 

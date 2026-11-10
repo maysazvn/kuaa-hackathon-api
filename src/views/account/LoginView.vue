@@ -2,7 +2,7 @@
 
 import { ref, onMounted } from 'vue'
 import ButtonChild from '@/components/ButtonChild.vue'
-import {router, useRouter} from '@/router'
+// import { router } from '@/router'
 import { userReal } from './login/UserReal'
 import { emailReal } from './login/EmailReal'
 import { senhaReal } from './login/SenhaReal'
@@ -77,7 +77,7 @@ function selecionarCadastro() {
       senhaFalsa.value = ''
       userFalso.value = ''
 
-      const novoUsuario = {
+       const novoUsuario = {
   id: maiorId + 1,
   nome: userReal.value,
   pfp: localStorage.getItem('urlFoto') || '/pfpPlaceholder.png',
