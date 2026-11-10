@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
 import { GoToSymbol } from 'vuetify/lib/composables/goto.mjs'
-
+import { useUser } from '../account/LoginView.vue'
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
 
@@ -19,7 +19,7 @@ const usuario = ref({
 // Simulando a busca do usuário logado (ajuste conforme o ID salvo no login)
 async function carregarPerfil() {
   try {
-    const idLogado = localStorage.getItem('user_id') || 1 // Exemplo
+    const idLogado = idUser.value
     const resposta = await fetch(`${API_URL}/users/${idLogado}`)
     if (resposta.ok) {
       usuario.value = await resposta.json()
@@ -38,7 +38,7 @@ async function atualizarPerfil() {
 async function excluirUser() {
   if (confirm('Tem certeza que deseja excluir sua conta?')) {
     try {
-      await fetch(`${API_URL}/users/${usuario.value.id}`, {
+      await fetch(`${API_URL}/users/${useUser()}`, {
         method: 'DELETE',
       })
       

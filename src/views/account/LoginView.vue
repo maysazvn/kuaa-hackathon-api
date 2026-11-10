@@ -7,6 +7,8 @@ import { loginOut } from './login/Loginout'
 import { users } from '../user/Users'
 import { formatNumber } from 'vuetify/lib/components/VNumberInput/format.mjs'
 
+
+
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
 
@@ -21,7 +23,13 @@ const formulario = ref({
 const emailReal = ref(null)
 const senhaReal = ref(null)
 const userReal = ref(null)
+const idUser = ref(null);
 
+// export function useUser() {
+//   return {
+//     idUser
+//   }
+// }
 onMounted(() => {
   const emailSalvo = localStorage.getItem('user_email')
   const userSalvo = localStorage.getItem('user_nome')
@@ -104,7 +112,7 @@ async function logarUsuario() {
       localStorage.setItem('login_status', 'ativo')
       localStorage.setItem('user_nome', usuarioEncontrado.nome)
       localStorage.setItem('user_email', usuarioEncontrado.email)
-      
+      idUser.value = usuarioEncontrado.id
       alert('Você logou com sucesso!')
       router.push('/profile') // Redireciona para o perfil
     } else {
