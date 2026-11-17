@@ -49,15 +49,11 @@ async function criarPostRapido() {
     alert('Escreva algo antes de postar!')
   }
 
-
-  let maiorId = Math.max(...postagens.value.map((item) => item.id))
-
   const novoPost = {
     titulo: '',
     conteudo: conteudoRapido.value,
     autorID: pegarIDUsuario(),
     data: new Date().toLocaleDateString('pt-BR'),
-    id: maiorId + 1,
     salaId: Number(salaSelecionada.value),
     curtidas: 0,
     salvos: 0,

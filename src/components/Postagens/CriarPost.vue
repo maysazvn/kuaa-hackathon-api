@@ -11,7 +11,6 @@ const postagensTituloNovo = ref('')
 const postagensConteudoNovo = ref('')
 const salaSelecionada = ref(null)
 const salaFinal = computed(() => salaSelecionada.value)
-const storage = 'postagens'
 const imagemPost = ref('')
 const API_URL = 'http://localhost:3000'; 
 
@@ -43,13 +42,12 @@ async function adicionar() {
   ) {
     alert(`Preencha os campos!`)
   } else {
-    let maiorId = Math.max(...postagens.value.map((item) => item.id))
+
     const novoPost = {
       titulo: postagensTituloNovo.value,
       conteudo: postagensConteudoNovo.value,
       autorID: pegarIDUsuario(),
       data: new Date().toLocaleDateString('pt-BR'),
-      id: maiorId + 1,
       salaId: Number(salaFinal.value),
       imagem: imagemPost.value || '',
       curtidas: 0,
@@ -57,14 +55,13 @@ async function adicionar() {
     }
 
     console.log(`sala selecionada: ${salaFinal.value}`)
-
-
+    
 await fetch(`${API_URL}/postagens`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
   },
-  body: JSON.stringify(novoPost.value)
+  body: JSON.stringify(novoPost)
 });
 
     postagens.value.unshift(novoPost)
@@ -73,7 +70,7 @@ await fetch(`${API_URL}/postagens`, {
     imagemPost.value = ''
     console.log('Post atualizado:', JSON.parse(JSON.stringify(postagens.value)))
 
-    localStorage.setItem(storage, JSON.stringify(postagens.value))
+    /*localStorage.setItem(storage, JSON.stringify(postagens.value))*/
     emit('fechar')
   }
 }

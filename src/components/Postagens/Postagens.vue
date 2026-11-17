@@ -91,7 +91,7 @@ async function editar(post) {
   if (index !== -1) {
     const edicao = prompt(`Edite o seu post...`, post.conteudo)
 
-    const resposta = await fetch(`${API_URL}/postagens/${post}`, {
+    const resposta = await fetch(`${API_URL}/postagens/${post.id}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
