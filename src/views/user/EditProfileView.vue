@@ -2,8 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
-import { GoToSymbol } from 'vuetify/lib/composables/goto.mjs'
-import { useUser } from '../account/LoginView.vue'
+
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
 
@@ -16,10 +15,17 @@ const usuario = ref({
   banner: '/bannerPlaceholder.png'
 })
 
-// Simulando a busca do usuário logado (ajuste conforme o ID salvo no login)
+// Carrega o perfil usando o ID salvo no localStorage
 async function carregarPerfil() {
   try {
-    const idLogado = idUser.value
+    const idLogado = localStorage.getItem('user_id')
+    
+    if (!idLogado) {
+      alert('Usuário não autenticado!')
+      router.push('/')
+      return
+    }
+
     const resposta = await fetch(`${API_URL}/users/${idLogado}`)
     if (resposta.ok) {
       usuario.value = await resposta.json()
@@ -29,16 +35,39 @@ async function carregarPerfil() {
   }
 }
 
+// Atualiza o perfil usando o método PUT
 async function atualizarPerfil() {
-  try {GoToSymbol} catch (error) {
+  try {
+    const idLogado = localStorage.getItem('user_id')
+
+    const resposta = await fetch(`${API_URL}/users/${idLogado}`, {
+      method: 'PUT', // ou PATCH dependendo da sua API
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(usuario.value),
+    })
+
+    if (resposta.ok) {
+      // Atualiza o nome salvo no localStorage se o usuário alterou
+      localStorage.setItem('user_nome', usuario.value.nome)
+      alert('Perfil atualizado com sucesso!')
+      router.push('/profile')
+    } else {
+      alert('Erro ao atualizar perfil.')
+    }
+  } catch (error) {
     console.error('Erro ao atualizar:', error)
   }
 }
 
+// Exclui o usuário da API
 async function excluirUser() {
-  if (confirm('Tem certeza que deseja excluir sua conta?')) {
+  if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
     try {
-      await fetch(`${API_URL}/users/${useUser()}`, {
+      const idLogado = localStorage.getItem('user_id')
+
+      await fetch(`${API_URL}/users/${idLogado}`, {
         method: 'DELETE',
       })
       
@@ -85,13 +114,13 @@ onMounted(carregarPerfil)
     </form>
 
     <div>
-      <ButtonChild @clique="$emit(excluirUser())" class="btn btn-danger">
+      <!-- Corrigido para chamar a função diretamente sem $emit errado -->
+      <ButtonChild @clique="excluirUser" class="btn btn-danger">
         Excluir Usuário
       </ButtonChild>
     </div>
   </div>
 </template>
-
 <style scoped>
 .container {
   max-width: 800px;

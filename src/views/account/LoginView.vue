@@ -4,8 +4,8 @@ import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
 
 import { loginOut } from './login/Loginout'
-import { users } from '../user/Users'
-import { formatNumber } from 'vuetify/lib/components/VNumberInput/format.mjs'
+// import { users } from '../user/Users'
+// import { formatNumber } from 'vuetify/lib/components/VNumberInput/format.mjs'
 
 
 
@@ -112,6 +112,7 @@ async function logarUsuario() {
       localStorage.setItem('login_status', 'ativo')
       localStorage.setItem('user_nome', usuarioEncontrado.nome)
       localStorage.setItem('user_email', usuarioEncontrado.email)
+      localStorage.setItem('user_id', usuarioEncontrado.id) //novo, quarda o id no local storage
       idUser.value = usuarioEncontrado.id
       alert('Você logou com sucesso!')
       router.push('/profile') // Redireciona para o perfil
