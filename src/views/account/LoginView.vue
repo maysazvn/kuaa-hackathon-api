@@ -7,8 +7,9 @@ import { loginOut } from './login/Loginout'
 // import { users } from '../user/Users'
 // import { formatNumber } from 'vuetify/lib/components/VNumberInput/format.mjs'
 
-
-
+import { userReal } from './login/UserReal'
+import { emailReal } from './login/EmailReal'
+import { senhaReal } from './login/SenhaReal'
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
 
@@ -20,9 +21,9 @@ const formulario = ref({
   nome: '',
   senha: ''
 })
-const emailReal = ref(null)
-const senhaReal = ref(null)
-const userReal = ref(null)
+
+
+
 const idUser = ref(null);
 
 // export function useUser() {
@@ -60,6 +61,7 @@ function selecionarCadastro() {
 }
 
 async function cadastrarUsuario() {
+  if(loginOut.value == 'inativo'){
   try {
     const resposta = await fetch(`${API_URL}/users`, {
       method: 'POST',
@@ -86,16 +88,19 @@ async function cadastrarUsuario() {
       alert('Cadastro realizado com sucesso! Faça login.')
       emailReal.value = formulario.value.email;
       senhaReal.value = formulario.value.senha;
-      userReal.value = formulario.value.user;
+      userReal.value = formulario.value.nome;
       formulario.value.senha = '';
       formulario.value.nome = '';
       formulario.value.email = '';
-      
+      loginOut.value = 'processo'
       selecionarLogin()
     }
   } catch (error) {
     console.error('Erro ao cadastrar:', error)
   }
+}else{
+  alert('Você já possui cadastro! Faça login!')
+}
 }
 
 async function logarUsuario() {
@@ -112,8 +117,12 @@ async function logarUsuario() {
       localStorage.setItem('login_status', 'ativo')
       localStorage.setItem('user_nome', usuarioEncontrado.nome)
       localStorage.setItem('user_email', usuarioEncontrado.email)
+      localStorage.setItem('user_senha', usuarioEncontrado.senha)
       localStorage.setItem('user_id', usuarioEncontrado.id) //novo, quarda o id no local storage
       idUser.value = usuarioEncontrado.id
+      emailReal.value = usuarioEncontrado.email
+  userReal.value = usuarioEncontrado.nome
+  senhaReal.value = usuarioEncontrado.senha
       alert('Você logou com sucesso!')
       router.push('/profile') // Redireciona para o perfil
     } else {

@@ -87,10 +87,10 @@ function excluirUser() {
               <router-link to="/edit">
                 <button v-on:click="editar" class="btn-menu">Editar</button>
               </router-link>
-              <button v-on:click="excluirUser" class="btn-menu">Deletar</button>
+              <!-- <button v-on:click="excluirUser" class="btn-menu">Deletar</button> -->
             </div>
 
-            <div v-if="popupExcluir" class="telapopup">
+            <!-- <div v-if="popupExcluir" class="telapopup">
               <div class="popup">
                 <h2>Tem certeza que deseja excluir seu usuário?</h2>
                 <p>
@@ -102,7 +102,7 @@ function excluirUser() {
                   <button @click="popupExcluir = false" class="btn-cancelar">Cancelar</button>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
 

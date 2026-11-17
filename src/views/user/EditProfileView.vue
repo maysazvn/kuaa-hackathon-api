@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ButtonChild from '@/components/ButtonChild.vue'
+import { loginOut } from '../account/login/Loginout'
 
 const router = useRouter()
 const API_URL = 'http://localhost:3000'
@@ -53,6 +54,7 @@ async function atualizarPerfil() {
       localStorage.setItem('user_nome', usuario.value.nome)
       alert('Perfil atualizado com sucesso!')
       router.push('/profile')
+      
     } else {
       alert('Erro ao atualizar perfil.')
     }
@@ -72,7 +74,9 @@ async function excluirUser() {
       })
       
       localStorage.clear()
+      loginOut.value = 'inativo'
       alert('Conta excluída com sucesso.')
+    
       router.push('/')
     } catch (error) {
       console.error('Erro ao excluir usuário:', error)
