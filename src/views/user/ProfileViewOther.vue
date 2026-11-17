@@ -18,6 +18,7 @@ const estaseguindo = ref(false);
 
 const anotacaoId = ref(null);
 const anotacao = ref('');
+const editandoAnotacao = ref(false);
 
 
 async function carregarUsuario() {
@@ -30,13 +31,18 @@ async function carregarUsuario() {
     }
     usuario.value = await respostaUser.json();
 
-    const respostaAnot = await fetch(`${API_URL}/anotacao?userId=${usuario.value.id}`);
+    const respostaAnot = await fetch(`${API_URL}/anotacao`);
     if (respostaAnot.ok) {
-      const dados = await respostaAnot.json();
+      const listaAnotacoes = await respostaAnot.json();
+      
+      // Compara convertendo ambos para String para evitar erro entre 1 e "1"
+      const anotacaoEncontrada = listaAnotacoes.find(
+        (item) => String(item.userId) === String(usuario.value.id)
+      );
 
-      if (dados && dados.length > 0) {
-        anotacao.value = dados[0].texto;
-        anotacaoId.value = dados[0].id;
+      if (anotacaoEncontrada) {
+        anotacao.value = anotacaoEncontrada.texto;
+        anotacaoId.value = anotacaoEncontrada.id;
       } else {
         anotacao.value = '';
         anotacaoId.value = null;
@@ -134,12 +140,14 @@ async function salvarAnotacao() {
     console.error('Erro ao submeter anotação:', error);
     alert('Erro ao salvar a anotação!');
   }
+  editandoAnotacao.value = false;
 }
-
+editandoAnotacao.value = false;
 
 async function limparAnotacao() {
   if (!anotacaoId.value) {
     anotacao.value = '';
+    editandoAnotacao.value = false;
     return;
   }
 
@@ -152,15 +160,16 @@ async function limparAnotacao() {
       throw new Error('Não foi possível deletar o registro.');
     }
 
-
     anotacao.value = '';
     anotacaoId.value = null;
+    editandoAnotacao.value = false; 
 
   } catch (error) {
     console.error('Erro ao deletar anotação:', error);
     alert('Erro ao limpar a anotação!');
   }
 }
+
 
 </script>
 
@@ -172,16 +181,25 @@ async function limparAnotacao() {
       <img v-if="usuario.banner" :src="usuario.banner" class="banner" />
       <img v-if="usuario.pfp" :src="usuario.pfp" class="foto" />
 
-        <div class="campo-anotacao">
+        <div 
+          class="campo-anotacao"
+          :class="{ 'com-texto': anotacao && anotacao.trim().length > 0 }"
+          @click="editandoAnotacao = true"
+        >
           <textarea
             v-model="anotacao"
+            @focus="editandoAnotacao = true"
             class="descricao"
             placeholder="Essa pessoa é..."
             maxlength="100"
           ></textarea>
-          <span class="contador">{{ anotacao ? anotacao.length : 0 }}/100</span>
-          <button @click="limparAnotacao">Limpar</button>
-          <button @click="salvarAnotacao">Salvar</button>
+          <div v-if="editandoAnotacao" class="rodape-anotacao">
+            <span class="contador">{{ anotacao ? anotacao.length : 0 }}/100</span>
+            <div class="botoes-anotacao">
+              <button type="button" @click.stop="limparAnotacao">Limpar</button>
+              <button type="button" @click.stop="salvarAnotacao">Salvar</button>
+            </div>
+          </div>
         </div>
 
 
@@ -441,13 +459,73 @@ hr{
 
 }
 
-.campo-anotacao{
-position: absolute;
-  top: 130px;
-  left: 155px;
+.campo-anotacao {
+  position: absolute;
+  top: 10px;
+  left: -270px;
   z-index: 20;
   width: 250px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
+  background-color: #d9d9d9;
+  border-radius: 28px;
+  padding: 16px 20px;
+}
+
+.campo-anotacao::before {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 225px;
+  width: 16px;
+  height: 16px;
+  background-color: #d9d9d9;
+
+  border-radius: 50%;
+
+}
+
+.campo-anotacao::after {
+  content: "";
+  position: absolute;
+  bottom: -24px;
+  left: 240px;
+  width: 9px;
+  height: 9px;
+  background-color: #d9d9d9;
+
+  border-radius: 50%;
+}
+
+.campo-anotacao .descricao {
+  width: 100%;
+  min-height: 35px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: #333333;
+}
+
+.campo-anotacao .contador {
+  font-size: 11px;
+  color: #777777;
+  text-align: right;
+}
+
+.campo-anotacao button {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background-color: #f4f4f4;
+  transition: background-color 0.2s;
+}
+
+.campo-anotacao button:hover {
+  background-color: #e0e0e0;
 }
 </style>
