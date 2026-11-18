@@ -1,57 +1,82 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { computed, ref } from 'vue'
-import { salas } from '@/data/salas'
-import ButtonEnter from '@/components/ButtonEnter.vue'
+import { computed, ref, onMounted } from 'vue'
 import { loginOut } from '../account/login/Loginout'
+import { userReal } from '../account/login/UserReal'
+import ButtonEnter from '@/components/ButtonEnter.vue'
 import Postagens from '@/components/Postagens/Postagens.vue'
 import { postagens } from '@/data/postagens'
 import { users } from '../user/Users'
-import { userReal } from '../account/login/UserReal'
-defineProps(['idSala', 'nome', 'participantes', 'desc', 'usuarioCriador', 'status', 'banner'])
+
+const API_URL = 'http://localhost:3000'
 
 const route = useRoute()
 const router = useRouter()
+
+const sala = ref(null)
 const popupExcluir = ref(false)
 const menuAberto = ref(false)
 
+async function buscarSala() {
+  try {
+    const resposta = await fetch(`${API_URL}/salas/${route.params.id}`)
+
+    if (!resposta.ok) {
+      sala.value = null
+      return
+    }
+
+    sala.value = await resposta.json()
+  } catch (erro) {
+    console.error('Erro ao buscar sala:', erro)
+  }
+}
+
+onMounted(buscarSala)
+
 const postsSala = computed(() => {
-  return postagens.value.filter((post) => post.salaId === Number(sala.value.idSala))
+  if (!sala.value) return []
+
+  return postagens.value.filter(
+    post => post.salaId == sala.value.id
+  )
 })
 
-console.log('ID da rota:', route.params.id)
-console.log('Salas:', salas.value)
+const criador = computed(() => {
+  return users.find(
+    usuario => usuario.nome === sala.value?.usuarioCriador
+  )
+})
 
-const criador = computed(() => users.find((usuario) => usuario.nome === sala.value?.usuarioCriador))
-const sala = computed(() => salas.value.find((s) => s.idSala == route.params.id))
-function confirmarEx() {
-  const index = salas.value.findIndex((s) => s.idSala == route.params.id)
-  if (index !== -1) {
-    salas.value.splice(index, 1)
-  }
+const statusTexto = computed(() => {
+  return sala.value?.status == 1 ? 'Ativo' : 'Inativo'
+})
 
-  localStorage.removeItem("salas");
-
-  popupExcluir.value = false
-  router.push('/explore')
-}
 function excluirSala() {
   popupExcluir.value = true
-
 }
+
+async function confirmarEx() {
+  try {
+    const resposta = await fetch(`${API_URL}/salas/${sala.value.id}`, {
+      method: 'DELETE'
+    })
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao excluir sala')
+    }
+
+    popupExcluir.value = false
+    router.push('/explore')
+  } catch (erro) {
+    console.error(erro)
+    alert('Não foi possível excluir a sala.')
+  }
+}
+
 function editarSala() {
   router.push(`/salas/${route.params.id}/editar`)
 }
-
-const statusTexto = computed(() => {
-  if (sala.value?.status == 1) {
-    return 'Ativo'
-  }
-
-  return 'Inativo'
-})
-
-console.log('Sala encontrada:', sala.value)
 </script>
 <template>
   <div class="container-sala" v-if="sala">

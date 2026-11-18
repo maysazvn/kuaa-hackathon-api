@@ -1,13 +1,86 @@
 {
-  "comentariosReais":[],
-  "postagens":[],
-  "salas":[
-    {}
+  "comentariosReais": [],
+  "postagens": [],
+  "salas": [
+    {
+      "id": "1",
+      "nome": "Programação",
+      "desc": "Conversas sobre programação",
+      "banner": "",
+      "status": 1,
+      "usuarioCriador": "Gabriel",
+      "participantes": 9
+    },
+    {
+      "nome": "a",
+      "desc": "a",
+      "banner": "https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg",
+      "status": 1,
+      "usuarioCriador": "a",
+      "participantes": 1,
+      "id": "XVtshdRgU44"
+    }
   ],
-  "salasUsuario":[],
-  "users":[],
-  "login":[],
-
-
+  "salasUsuario": [
+    {
+      "id": "1",
+      "salaId": "1",
+      "usuario": "Gabriel"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "7uaOmgCo8KE"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "IVpfA5YHQP4"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "IGPgh2YuNKQ"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "n1tnmPBGE80"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "5OGOzebflNI"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "9IeFP9UwC0g"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "MOb0r7k2MNM"
+    },
+    {
+      "salaId": "undefined",
+      "usuario": "a",
+      "id": "mnEeham5P3Y"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "5TBkq8czPH4"
+    }
+  ],
+  "users": [],
+  "login": [
+    {
+      "nomeUser": "a",
+      "email": "clarakellermanndossantos@gmail.com",
+      "id": "vlfgX1NN0BA",
+      "senha": "a"
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
