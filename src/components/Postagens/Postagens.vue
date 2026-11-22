@@ -158,12 +158,9 @@ function salaDoPost(salaId) {
 
 const storage = 'postagens'
 
-onMounted(() => {
-  const salvos = localStorage.getItem(storage)
-
-  if (salvos) {
-    postagens.value = JSON.parse(salvos)
-  }
+onMounted(async () => {
+  const resposta = await fetch(`${API_URL}/postagens`)
+  postagens.value = await resposta.json()
 })
 </script>
 

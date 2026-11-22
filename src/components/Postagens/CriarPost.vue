@@ -12,7 +12,7 @@ const postagensConteudoNovo = ref('')
 const salaSelecionada = ref(null)
 const salaFinal = computed(() => salaSelecionada.value)
 const imagemPost = ref('')
-const API_URL = 'http://localhost:3000'; 
+const API_URL = 'http://localhost:3000';
 
 function usuarioEstaNaSala(salaIdDoPost) {
   if (!Array.isArray(salasUsuario.value)) return false
@@ -41,38 +41,46 @@ async function adicionar() {
     !salaFinal.value
   ) {
     alert(`Preencha os campos!`)
-  } else {
-
-    const novoPost = {
-      titulo: postagensTituloNovo.value,
-      conteudo: postagensConteudoNovo.value,
-      autorID: pegarIDUsuario(),
-      data: new Date().toLocaleDateString('pt-BR'),
-      salaId: Number(salaFinal.value),
-      imagem: imagemPost.value || '',
-      curtidas: 0,
-      salvos: 0,
-    }
-
-    console.log(`sala selecionada: ${salaFinal.value}`)
-    
-await fetch(`${API_URL}/postagens`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(novoPost)
-});
-
-    postagens.value.unshift(novoPost)
-    postagensTituloNovo.value = ''
-    postagensConteudoNovo.value = ''
-    imagemPost.value = ''
-    console.log('Post atualizado:', JSON.parse(JSON.stringify(postagens.value)))
-
-    /*localStorage.setItem(storage, JSON.stringify(postagens.value))*/
-    emit('fechar')
+    return
   }
+
+  const novoPost = {
+    titulo: postagensTituloNovo.value,
+    conteudo: postagensConteudoNovo.value,
+    autorID: pegarIDUsuario(),
+    data: new Date().toLocaleDateString('pt-BR'),
+    salaId: Number(salaFinal.value),
+    imagem: imagemPost.value || '',
+    curtido: false,
+    curtidas: 0,
+    salvou: false,
+    salvos: 0,
+    criadoEm: Date.now(),
+  }
+
+  const resposta = await fetch(`${API_URL}/postagens`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(novoPost)
+  });
+
+  if (!resposta.ok) {
+    alert('Erro ao criar o post')
+    return
+  }
+
+  const postCriado = await resposta.json()
+
+  postagens.value.unshift(postCriado)
+  postagensTituloNovo.value = ''
+  postagensConteudoNovo.value = ''
+  imagemPost.value = ''
+  console.log('Post atualizado:', JSON.parse(JSON.stringify(postagens.value)))
+
+  /*localStorage.setItem(storage, JSON.stringify(postagens.value))*/
+  emit('fechar')
 }
 </script>
 <template>
@@ -84,59 +92,28 @@ await fetch(`${API_URL}/postagens`, {
         <v-card-text class="conteudo-postar">
           <v-row density="comfortable">
             <v-col cols="12" md="12">
-              <v-text-field
-                label="Título *"
-                required
-                v-model="postagensTituloNovo"
-                class="formulario"
-                variant="outlined"
-                base-color="#3e3e3e"
-                bg-color="#1e1e1e"
-              ></v-text-field>
+              <v-text-field label="Título *" required v-model="postagensTituloNovo" class="formulario"
+                variant="outlined" base-color="#3e3e3e" bg-color="#1e1e1e"></v-text-field>
             </v-col>
 
             <v-col cols="12" md="12">
-              <v-textarea
-                hint="Compartilhe suas ideias"
-                label="O que está pensando agora? *"
-                v-model="postagensConteudoNovo"
-                class="formulario"
-                variant="outlined"
-                base-color="#3e3e3e"
-                bg-color="#1e1e1e"
-                rows="3"
-              ></v-textarea>
+              <v-textarea hint="Compartilhe suas ideias" label="O que está pensando agora? *"
+                v-model="postagensConteudoNovo" class="formulario" variant="outlined" base-color="#3e3e3e"
+                bg-color="#1e1e1e" rows="3"></v-textarea>
             </v-col>
 
             <v-col cols="12" md="12">
-              <v-textarea
-                hint="Imagem"
-                label="Uma imagem pode dizer mais que palavras (URL imagem)"
-                v-model="imagemPost"
-                class="formulario"
-                variant="outlined"
-                base-color="#3e3e3e"
-                bg-color="#1e1e1e"
-                rows="3"
-              ></v-textarea>
+              <v-textarea hint="Imagem" label="Uma imagem pode dizer mais que palavras (URL imagem)"
+                v-model="imagemPost" class="formulario" variant="outlined" base-color="#3e3e3e" bg-color="#1e1e1e"
+                rows="3"></v-textarea>
             </v-col>
 
             <v-col cols="12">
-              <v-autocomplete
-                v-model="salaSelecionada"
-                :items="(salas.value || salas).filter((sala) => usuarioEstaNaSala(sala.idSala))"
-                item-title="nome"
-                item-value="idSala"
-                label="Sala *"
-                required
-                auto-select-first
-                class="formulario"
-                variant="outlined"
-                base-color="#3e3e3e"
-                bg-color="#1e1e1e"
-                :menu-props="{ contentClass: 'menu-salas-custom' }"
-                :no-data-text="'Sem salas'"
-              ></v-autocomplete>
+              <v-autocomplete v-model="salaSelecionada"
+                :items="(salas.value || salas).filter((sala) => usuarioEstaNaSala(sala.idSala))" item-title="nome"
+                item-value="idSala" label="Sala *" required auto-select-first class="formulario" variant="outlined"
+                base-color="#3e3e3e" bg-color="#1e1e1e" :menu-props="{ contentClass: 'menu-salas-custom' }"
+                :no-data-text="'Sem salas'"></v-autocomplete>
             </v-col>
           </v-row>
 
