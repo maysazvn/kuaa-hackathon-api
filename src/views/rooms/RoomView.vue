@@ -5,43 +5,39 @@ import { userReal } from '../account/login/UserReal'
 import { loginOut } from '../account/login/Loginout'
 
 const router = useRouter()
-
 const nome = ref('')
 const descricao = ref('')
 const banner = ref('')
 const coisa = ref(1)
-
-const API_URL = 'http://localhost:3000'
-
-const mensagem = 'Algum campo obrigatório deixou de ser preenchido'
+const membros = ref(0)
+const mensagem = 'Algum campo obrigatorio deixou de ser prenchido'
 
 function cancelar() {
   router.push('/')
 }
 
 async function criar() {
-  if (loginOut.value !== 'ativo') {
-    alert('Faça login para criar salas!')
-    return
-  }
-
-  if (nome.value.trim() === '' || descricao.value.trim() === '') {
+  if (nome.value === '' || descricao.value === '') {
     alert(mensagem)
     return
   }
 
+  if (banner.value === "") {
+    banner.value = "https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg"
+  }
+
   const novaSala = {
-    nome: nome.value.trim(),
-    desc: descricao.value.trim(),
-    banner: banner.value.trim() ||
-      'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg',
+    nome: nome.value,
+    desc: descricao.value,
+    banner: banner.value,
     status: coisa.value,
     usuarioCriador: userReal.value,
-    participantes: 1
+    participantes: membros.value + 1,
   }
 
   try {
-    const resposta = await fetch(`${API_URL}/salas`, {
+    // Requisição POST para o JSON Server
+    const resposta = await fetch('http://localhost:3000/salas', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -50,88 +46,61 @@ async function criar() {
     })
 
     if (!resposta.ok) {
-      throw new Error('Erro ao cadastrar sala')
+      throw new Error('Erro ao cadastrar a sala')
     }
 
-    const salaCriada = await resposta.json()
-
-    console.log('Sala criada:', salaCriada)
-
-    alert('Sala criada com sucesso!')
+    const dadosCriados = await resposta.json()
+    console.log('Sala criada com sucesso:', dadosCriados)
 
     nome.value = ''
     descricao.value = ''
     banner.value = ''
 
     router.push('/')
-  } catch (erro) {
-    console.error('Erro ao criar sala:', erro)
-    alert('Não foi possível criar a sala.')
+  } catch (error) {
+    console.error('Erro:', error)
+    alert('Não foi possível conectar com o servidor para criar a sala.')
   }
 }
 </script>
 
 <template>
   <span v-if="loginOut === 'ativo'">
-
-
-  <div class="container">
-    <h1 class="tituloCriarSala"><font-awesome-icon icon="chevron-left" /> Criar Sala</h1>
-
-    <div class="criarSala">
-      <div class="conteudo">
-        <div class="img">
-          <img
-            class="imagem"
-            :src="
-              banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'
-            "
-          />
-
-          <input v-model="banner" placeholder="Insira o URL da imagem" />
-        </div>
-
-        <div class="campos">
-          <div class="campo">
-            <label>Nome da Sala</label>
-            <div class="input">
-              <input
-                v-model="nome"
-                type="text"
-                placeholder="Insira o nome da sala"
-                maxlength="25"
-              />
-              <span class="contador">{{ nome.length }}/25</span>
-            </div>
+    <div class="container">
+      <h1 class="tituloCriarSala"><font-awesome-icon icon="chevron-left" /> Criar Sala</h1>
+      <div class="criarSala">
+        <div class="conteudo">
+          <div class="img">
+            <img class="imagem" :src="banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'" />
+            <input v-model="banner" placeholder="Insira o URL da imagem" />
           </div>
-
-          <div class="campo">
-            <label>Descrição</label>
-            <div class="input">
-              <textarea
-                v-model="descricao"
-                type="text"
-                placeholder="Descreva a sala"
-                maxlength="300"
-              ></textarea>
-              <span class="contador">{{ descricao.length }}/300</span>
+          <div class="campos">
+            <div class="campo">
+              <label>Nome da Sala</label>
+              <div class="input">
+                <input v-model="nome" type="text" placeholder="Insira o nome da sala" maxlength="25" />
+                <span class="contador">{{ nome.length }}/25</span>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Descrição</label>
+              <div class="input">
+                <textarea v-model="descricao" placeholder="Descreva a sala" maxlength="300"></textarea>
+                <span class="contador">{{ descricao.length }}/300</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="botoes">
-        <button @click="criar" class="btnCriar">Criar</button>
-        <button @click="cancelar" class="btnCancelar">Cancelar</button>
+        <div class="botoes">
+          <button @click="criar" class="btnCriar">Criar</button>
+          <button @click="cancelar" class="btnCancelar">Cancelar</button>
+        </div>
       </div>
     </div>
-  </div>
   </span>
-   <span v-else-if="loginOut === 'inativo'" class="mensagemSemLogin">
-    <p class="login">
-      Faça Login para criar salas!
-    </p>
-   </span>
+  <span v-else-if="loginOut === 'inativo'" class="mensagemSemLogin">
+    <p class="login">Faça Login para criar salas!</p>
+  </span>
 </template>
 
 <style scoped>

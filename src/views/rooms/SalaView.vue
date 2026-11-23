@@ -1,144 +1,128 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
 import { computed, ref, onMounted } from 'vue'
-import { loginOut } from '../account/login/Loginout'
-import { userReal } from '../account/login/UserReal'
 import ButtonEnter from '@/components/ButtonEnter.vue'
 import Postagens from '@/components/Postagens/Postagens.vue'
 import { postagens } from '@/data/postagens'
 import { users } from '../user/Users'
+import { userReal } from '../account/login/UserReal'
 
-const API_URL = 'http://localhost:3000'
+defineProps(['idSala', 'nome', 'participantes', 'desc', 'usuarioCriador', 'status', 'banner'])
 
 const route = useRoute()
 const router = useRouter()
-
-const sala = ref(null)
 const popupExcluir = ref(false)
 const menuAberto = ref(false)
+const sala = ref(null)
 
-async function buscarSala() {
+// Buscar a sala específica da API pelo ID quando o componente carregar
+onMounted(async () => {
   try {
-    const resposta = await fetch(`${API_URL}/salas/${route.params.id}`)
-
-    if (!resposta.ok) {
+    const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`)
+    if (resposta.ok) {
+      sala.value = await resposta.json()
+    } else {
       sala.value = null
-      return
     }
-
-    sala.value = await resposta.json()
-  } catch (erro) {
-    console.error('Erro ao buscar sala:', erro)
+  } catch (error) {
+    console.error('Erro ao buscar sala:', error)
   }
-}
-
-onMounted(buscarSala)
+})
 
 const postsSala = computed(() => {
   if (!sala.value) return []
-
-  return postagens.value.filter(
-    post => post.salaId == sala.value.id
-  )
+  return postagens.value.filter((post) => post.salaId === Number(sala.value.id))
 })
 
-const criador = computed(() => {
-  return users.find(
-    usuario => usuario.nome === sala.value?.usuarioCriador
-  )
-})
+const criador = computed(() => users.find((usuario) => usuario.nome === sala.value?.usuarioCriador))
 
-const statusTexto = computed(() => {
-  return sala.value?.status == 1 ? 'Ativo' : 'Inativo'
-})
+async function confirmarEx() {
+  try {
+    // Requisição DELETE para remover do db.json
+    const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`, {
+      method: 'DELETE'
+    })
+
+    if (resposta.ok) {
+      popupExcluir.value = false
+      router.push('/explore')
+    } else {
+      alert('Erro ao excluir a sala.')
+    }
+  } catch (error) {
+    console.error('Erro na exclusão:', error)
+  }
+}
 
 function excluirSala() {
   popupExcluir.value = true
 }
 
-async function confirmarEx() {
-  try {
-    const resposta = await fetch(`${API_URL}/salas/${sala.value.id}`, {
-      method: 'DELETE'
-    })
-
-    if (!resposta.ok) {
-      throw new Error('Erro ao excluir sala')
-    }
-
-    popupExcluir.value = false
-    router.push('/explore')
-  } catch (erro) {
-    console.error(erro)
-    alert('Não foi possível excluir a sala.')
-  }
-}
-
 function editarSala() {
   router.push(`/salas/${route.params.id}/editar`)
 }
+
+const statusTexto = computed(() => {
+  if (sala.value?.status == 1) {
+    return 'Ativo'
+  }
+  return 'Inativo'
+})
 </script>
+
 <template>
   <div class="container-sala" v-if="sala">
     <div class="header-pagina">
       <div class="titulo">
         <RouterLink to="/explore" class="voltar">
-          <font-awesome-icon icon="chevron-left"></font-awesome-icon> Perfil de sala</RouterLink
-        >
+          <font-awesome-icon icon="chevron-left"></font-awesome-icon> Perfil de sala
+        </RouterLink>
       </div>
     </div>
 
     <div class="card-sala">
       <div class="topo-sala">
         <div class="fotoinfo">
-        <img :src="sala.banner" class="foto-sala" />
-
-        <div class="info-sala">
-          <h2 class="nome-sala">{{ sala.nome }}</h2>
-          <div class="metadados">
-            <div>
-              <RouterLink v-if="sala.usuarioCriador === userReal" :to="`/profile`">
-                <span>CRIADOR</span> {{ sala.usuarioCriador }}
-              </RouterLink>
-              <RouterLink v-else :to="`/otherProfile/${criador.id}`">
-                <span>CRIADOR</span> {{ sala.usuarioCriador }}
-              </RouterLink>
-            </div>
-
-            <p><span>STATUS</span> {{ statusTexto }}</p>
+          <img :src="sala.banner" class="foto-sala" />
+          <div class="info-sala">
+            <h2 class="nome-sala">{{ sala.nome }}</h2>
+            <div class="metadados">
+              <div>
+                <RouterLink v-if="sala.usuarioCriador === userReal" :to="`/profile`">
+                  <span>CRIADOR</span> {{ sala.usuarioCriador }}
+                </RouterLink>
+                <RouterLink v-else :to="`/otherProfile/${criador?.id}`">
+                  <span>CRIADOR</span> {{ sala.usuarioCriador }}
+                </RouterLink>
+              </div>
+              <p><span>STATUS</span> {{ statusTexto }}</p>
             </div>
           </div>
         </div>
 
         <div class="acoes-sala">
           <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
-          <div class="menu">
-          
-          
-
-            <div class="menu" v-if="sala.usuarioCriador === userReal">
-              <button class="menubotao" @click="menuAberto = !menuAberto">...</button>
-              <div class="menuaberto" v-if="menuAberto">
-                <button @click="editarSala">Editar sala</button>
-                <button @click="excluirSala">Apagar sala</button>
-              </div>
+          <div class="menu" v-if="sala.usuarioCriador === userReal">
+            <button class="menubotao" @click="menuAberto = !menuAberto">...</button>
+            <div class="menuaberto" v-if="menuAberto">
+              <button @click="editarSala">Editar sala</button>
+              <button @click="excluirSala">Apagar sala</button>
             </div>
           </div>
         </div>
       </div>  
 
-        <p class="descricao">{{ sala.desc }}</p>
+      <p class="descricao">{{ sala.desc }}</p>
 
-        <div class="membros">
-          <span>{{ sala.participantes }} membros</span>
-        </div>
+      <div class="membros">
+        <span>{{ sala.participantes }} membros</span>
+      </div>
 
-        <div class="secao-posts">
-          <h2>Posts</h2>
-          <hr />
-          <Postagens :posts="postsSala"></Postagens>
-        </div>
-      
+      <div class="secao-posts">
+        <h2>Posts</h2>
+        <hr />
+        <Postagens :posts="postsSala"></Postagens>
+      </div>
 
       <div v-if="popupExcluir" class="telapopup">
         <div class="popup">

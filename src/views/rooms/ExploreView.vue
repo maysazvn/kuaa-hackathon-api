@@ -1,9 +1,26 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import CartSala from '@/components/cart/CartSala.vue'
 import ButtonEnter from '@/components/ButtonEnter.vue';
-import { salas } from '@/data/salas'
 import { loginOut } from '../account/login/Loginout';
 import { userReal } from '../account/login/UserReal';
+
+// Lista reativa que vai armazenar as salas vindas da API
+const salas = ref([])
+
+// Buscar todas as salas com GET quando o componente carregar
+onMounted(async () => {
+  try {
+    const resposta = await fetch('http://localhost:3000/salas')
+    if (resposta.ok) {
+      salas.value = await resposta.json()
+    } else {
+      console.error('Erro ao carregar as salas')
+    }
+  } catch (error) {
+    console.error('Erro de conexão com o servidor:', error)
+  }
+})
 </script>
 
 <template>
@@ -14,8 +31,8 @@ import { userReal } from '../account/login/UserReal';
     <section class="salas">
       <CartSala
         v-for="sala in salas"
-        :key="sala.idSala"
-        :idSala="sala.idSala"
+        :key="sala.id"
+        :idSala="sala.id"
         :nome="sala.nome"
         :participantes="sala.participantes"
         :desc="sala.desc"
@@ -23,13 +40,10 @@ import { userReal } from '../account/login/UserReal';
         :banner="sala.banner"
         :status="sala.status"
       >
-      <div class="nav">
-      
-          <RouterLink :to="`/salas/${sala.idSala}`" class="visualizar"> Visualizar </RouterLink>
-        <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
-       
-       
-      </div>
+        <div class="nav">
+          <RouterLink :to="`/salas/${sala.id}`" class="visualizar"> Visualizar </RouterLink>
+          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
+        </div>
       </CartSala>
     </section>
   </div>
