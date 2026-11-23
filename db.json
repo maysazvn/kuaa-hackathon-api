@@ -9,7 +9,7 @@
       "banner": "",
       "status": 1,
       "usuarioCriador": "Gabriel",
-      "participantes": 9
+      "participantes": 12
     },
     {
       "nome": "a",
@@ -19,6 +19,15 @@
       "usuarioCriador": "a",
       "participantes": 1,
       "id": "XVtshdRgU44"
+    },
+    {
+      "nome": "sala maneira",
+      "desc": "EBAAA TA FUNCIONAOD",
+      "banner": "https://i.pinimg.com/originals/c6/fa/56/c6fa56cf351a182b8b9c5db2251269f9.gif",
+      "status": 1,
+      "usuarioCriador": "a",
+      "participantes": 1,
+      "id": "6BOAYOlB0KE"
     }
   ],
   "salasUsuario": [
@@ -71,6 +80,21 @@
       "salaId": "1",
       "usuario": "a",
       "id": "5TBkq8czPH4"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "TucITwj7uBA"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "3S75u2wWDkE"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "Mmk4kqSw7Z8"
     }
   ],
   "users": [],
