@@ -9,50 +9,19 @@
       "banner": "",
       "status": 1,
       "usuarioCriador": "Gabriel",
-      "participantes": 17
+      "participantes": 26
     },
     {
       "nome": "sala maneira",
-      "desc": "EBAAA TA FUNCIONAOD",
+      "desc": "EBAA TA FUNCINAOND",
       "banner": "https://i.pinimg.com/originals/c6/fa/56/c6fa56cf351a182b8b9c5db2251269f9.gif",
       "status": 1,
       "usuarioCriador": "a",
       "participantes": 1,
-      "id": "6BOAYOlB0KE"
+      "id": "bBt-ZUPrRDg"
     }
   ],
-  "salasUsuario": [
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "Mmk4kqSw7Z8"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "dQgexu-9YYI"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "XZpAFadt9QE"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "L2gTPpjbUk8"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "DeKj6n9N0gs"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "VbLyLvLA6HA"
-    }
-  ],
+  "salasUsuario": [],
   "users": [],
   "login": [
     {

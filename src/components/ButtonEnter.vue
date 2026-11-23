@@ -12,61 +12,99 @@ const props = defineProps({
   }
 })
 
-
 const emit = defineEmits(['atualizar-participantes'])
 
 const participando = ref(false)
 const carregando = ref(false)
 
+
+function obterSalaId() {
+  const id = props.sala?.id ?? props.sala?.idSala
+  if (!id || String(id) === 'undefined') return null
+  return String(id)
+}
+
+
+function obterUsuario() {
+  const u = typeof userReal === 'object' && userReal !== null ? userReal.value : userReal
+  return u ? String(u).trim() : ''
+}
+
+
 async function verificarParticipacao() {
-  if (!userReal.value) {
+  const salaIdReal = obterSalaId()
+  const usuarioAtual = obterUsuario()
+
+  if (!salaIdReal || !usuarioAtual) {
     participando.value = false
     return
   }
 
   try {
-    const resposta = await fetch(
-      `${API_URL}/salasUsuario?salaId=${props.sala.id}&usuario=${encodeURIComponent(userReal.value)}`
+    const resposta = await fetch(`${API_URL}/salasUsuario`)
+    if (!resposta.ok) return
+
+    const todosVinculos = await resposta.json()
+    const jaEsta = todosVinculos.some(
+      (item) => String(item.salaId) === salaIdReal && String(item.usuario) === usuarioAtual
     )
-    const participacoes = await resposta.json()
-    participando.value = participacoes.length > 0
+
+    participando.value = jaEsta
   } catch (erro) {
     console.error('Erro ao verificar participação:', erro)
   }
 }
 
 async function entrar() {
-  if (loginOut.value !== 'ativo') {
+  const statusLogin = typeof loginOut === 'object' && loginOut !== null ? loginOut.value : loginOut
+  if (statusLogin !== 'ativo') {
     alert('Faça login para entrar!')
     return
   }
 
-  if (carregando.value || participando.value) return
+  const salaIdReal = obterSalaId()
+  const usuarioAtual = obterUsuario()
+
+  if (!salaIdReal || !usuarioAtual) {
+    alert('Erro: ID da sala ou usuário inválido.')
+    return
+  }
+
+  if (carregando.value) return
   carregando.value = true
 
   try {
-    await verificarParticipacao()
-    if (participando.value) return
 
+    const resCheck = await fetch(`${API_URL}/salasUsuario`)
+    const todosVinculos = await resCheck.json()
+    const jaExiste = todosVinculos.some(
+      (item) => String(item.salaId) === salaIdReal && String(item.usuario) === usuarioAtual
+    )
 
+    if (jaExiste) {
+      participando.value = true
+      return
+    }
+
+   
     const resposta = await fetch(`${API_URL}/salasUsuario`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        salaId: String(props.sala.id),
-        usuario: userReal.value
+        salaId: salaIdReal,
+        usuario: usuarioAtual
       })
     })
 
-    if (!resposta.ok) throw new Error('Erro ao entrar na sala')
+    if (!resposta.ok) throw new Error('Erro ao registrar entrada')
 
 
-    const resSala = await fetch(`${API_URL}/salas/${props.sala.id}`)
+    const resSala = await fetch(`${API_URL}/salas/${salaIdReal}`)
     const salaAtual = await resSala.json()
     const novaQuantidade = (Number(salaAtual.participantes) || 0) + 1
 
 
-    const atualizacao = await fetch(`${API_URL}/salas/${props.sala.id}`, {
+    const resPatch = await fetch(`${API_URL}/salas/${salaIdReal}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -74,7 +112,7 @@ async function entrar() {
       })
     })
 
-    if (!atualizacao.ok) throw new Error('Erro ao atualizar participantes')
+    if (!resPatch.ok) throw new Error('Erro ao atualizar participantes')
 
     props.sala.participantes = novaQuantidade
     emit('atualizar-participantes', novaQuantidade)
@@ -83,63 +121,66 @@ async function entrar() {
   } catch (erro) {
     console.error(erro)
     alert('Não foi possível entrar na sala.')
-    await verificarParticipacao()
   } finally {
     carregando.value = false
   }
 }
 
 async function sair() {
-  if (carregando.value) return
+  const salaIdReal = obterSalaId()
+  const usuarioAtual = obterUsuario()
+
+  if (!salaIdReal || !usuarioAtual || carregando.value) return
   carregando.value = true
 
   try {
-    const resposta = await fetch(
-      `${API_URL}/salasUsuario?salaId=${props.sala.id}&usuario=${encodeURIComponent(userReal.value)}`
+
+    const resCheck = await fetch(`${API_URL}/salasUsuario`)
+    const todosVinculos = await resCheck.json()
+    const vinculosParaApagar = todosVinculos.filter(
+      (item) => String(item.salaId) === salaIdReal && String(item.usuario) === usuarioAtual
     )
-    const participacoes = await resposta.json()
 
-    if (participacoes.length === 0) {
-      participando.value = false
-      return
-    }
-
-    for (const participacao of participacoes) {
-      const delRes = await fetch(`${API_URL}/salasUsuario/${participacao.id}`, {
+    for (const vinculo of vinculosParaApagar) {
+      const delRes = await fetch(`${API_URL}/salasUsuario/${vinculo.id}`, {
         method: 'DELETE'
       })
-      if (!delRes.ok) throw new Error('Erro ao remover vínculo')
+      if (!delRes.ok) throw new Error(`Erro ao apagar vínculo ${vinculo.id}`)
     }
 
-    const resSala = await fetch(`${API_URL}/salas/${props.sala.id}`)
-    const salaAtual = await resSala.json()
-    const novaQuantidade = Math.max(0, (Number(salaAtual.participantes) || 0) - 1)
+    if (vinculosParaApagar.length > 0) {
+      const resSala = await fetch(`${API_URL}/salas/${salaIdReal}`)
+      const salaAtual = await resSala.json()
+      const novaQuantidade = Math.max(0, (Number(salaAtual.participantes) || 0) - 1)
 
-    const atualizacao = await fetch(`${API_URL}/salas/${props.sala.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        participantes: novaQuantidade
+      const resPatch = await fetch(`${API_URL}/salas/${salaIdReal}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantes: novaQuantidade
+        })
       })
-    })
 
-    if (!atualizacao.ok) throw new Error('Erro ao atualizar participantes ao sair')
+      if (!resPatch.ok) throw new Error('Erro ao atualizar participantes ao sair')
 
-    props.sala.participantes = novaQuantidade
-    emit('atualizar-participantes', novaQuantidade)
+      props.sala.participantes = novaQuantidade
+      emit('atualizar-participantes', novaQuantidade)
+    }
+
     participando.value = false
 
   } catch (erro) {
     console.error(erro)
     alert('Não foi possível sair da sala.')
-    await verificarParticipacao()
   } finally {
     carregando.value = false
   }
 }
 
 onMounted(verificarParticipacao)
-watch(userReal, verificarParticipacao)
+
+
+watch(() => props.sala?.id || props.sala?.idSala, verificarParticipacao)
 </script>
 
 <template>
