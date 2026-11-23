@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { loginOut } from '@/views/account/login/Loginout'
@@ -13,6 +12,9 @@ const props = defineProps({
   }
 })
 
+
+const emit = defineEmits(['atualizar-participantes'])
+
 const participando = ref(false)
 const carregando = ref(false)
 
@@ -26,7 +28,6 @@ async function verificarParticipacao() {
     const resposta = await fetch(
       `${API_URL}/salasUsuario?salaId=${props.sala.id}&usuario=${encodeURIComponent(userReal.value)}`
     )
-
     const participacoes = await resposta.json()
     participando.value = participacoes.length > 0
   } catch (erro) {
@@ -41,42 +42,42 @@ async function entrar() {
   }
 
   if (carregando.value || participando.value) return
-
   carregando.value = true
 
   try {
     await verificarParticipacao()
-
     if (participando.value) return
+
 
     const resposta = await fetch(`${API_URL}/salasUsuario`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         salaId: String(props.sala.id),
         usuario: userReal.value
       })
     })
 
-    if (!resposta.ok) throw new Error('Erro ao entrar')
+    if (!resposta.ok) throw new Error('Erro ao entrar na sala')
 
-    const quantidade = Number(props.sala.participantes) || 0
+
+    const resSala = await fetch(`${API_URL}/salas/${props.sala.id}`)
+    const salaAtual = await resSala.json()
+    const novaQuantidade = (Number(salaAtual.participantes) || 0) + 1
+
 
     const atualizacao = await fetch(`${API_URL}/salas/${props.sala.id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        participantes: quantidade + 1
+        participantes: novaQuantidade
       })
     })
 
     if (!atualizacao.ok) throw new Error('Erro ao atualizar participantes')
 
-    props.sala.participantes = quantidade + 1
+    props.sala.participantes = novaQuantidade
+    emit('atualizar-participantes', novaQuantidade)
     participando.value = true
 
   } catch (erro) {
@@ -90,14 +91,12 @@ async function entrar() {
 
 async function sair() {
   if (carregando.value) return
-
   carregando.value = true
 
   try {
     const resposta = await fetch(
       `${API_URL}/salasUsuario?salaId=${props.sala.id}&usuario=${encodeURIComponent(userReal.value)}`
     )
-
     const participacoes = await resposta.json()
 
     if (participacoes.length === 0) {
@@ -106,25 +105,28 @@ async function sair() {
     }
 
     for (const participacao of participacoes) {
-      await fetch(`${API_URL}/salasUsuario/${participacao.id}`, {
+      const delRes = await fetch(`${API_URL}/salasUsuario/${participacao.id}`, {
         method: 'DELETE'
       })
+      if (!delRes.ok) throw new Error('Erro ao remover vínculo')
     }
 
-    const quantidade = Number(props.sala.participantes) || 0
-    const novaQuantidade = Math.max(0, quantidade - 1)
+    const resSala = await fetch(`${API_URL}/salas/${props.sala.id}`)
+    const salaAtual = await resSala.json()
+    const novaQuantidade = Math.max(0, (Number(salaAtual.participantes) || 0) - 1)
 
-    await fetch(`${API_URL}/salas/${props.sala.id}`, {
+    const atualizacao = await fetch(`${API_URL}/salas/${props.sala.id}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         participantes: novaQuantidade
       })
     })
 
+    if (!atualizacao.ok) throw new Error('Erro ao atualizar participantes ao sair')
+
     props.sala.participantes = novaQuantidade
+    emit('atualizar-participantes', novaQuantidade)
     participando.value = false
 
   } catch (erro) {
@@ -137,7 +139,6 @@ async function sair() {
 }
 
 onMounted(verificarParticipacao)
-
 watch(userReal, verificarParticipacao)
 </script>
 

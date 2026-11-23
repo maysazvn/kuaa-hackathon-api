@@ -15,7 +15,7 @@ const popupExcluir = ref(false)
 const menuAberto = ref(false)
 const sala = ref(null)
 
-// Buscar a sala específica da API pelo ID quando o componente carregar
+
 onMounted(async () => {
   try {
     const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`)
@@ -38,7 +38,7 @@ const criador = computed(() => users.find((usuario) => usuario.nome === sala.val
 
 async function confirmarEx() {
   try {
-    // Requisição DELETE para remover do db.json
+
     const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`, {
       method: 'DELETE'
     })
@@ -101,7 +101,8 @@ const statusTexto = computed(() => {
         </div>
 
         <div class="acoes-sala">
-          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
+          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal"
+            @atualizar-participantes="(novaQtd) => sala.participantes = novaQtd" />
           <div class="menu" v-if="sala.usuarioCriador === userReal">
             <button class="menubotao" @click="menuAberto = !menuAberto">...</button>
             <div class="menuaberto" v-if="menuAberto">
@@ -110,7 +111,7 @@ const statusTexto = computed(() => {
             </div>
           </div>
         </div>
-      </div>  
+      </div>
 
       <p class="descricao">{{ sala.desc }}</p>
 
@@ -220,7 +221,7 @@ a.voltar {
   cursor: pointer;
 }
 
-.btn-entrar span{
+.btn-entrar span {
   font-weight: bold;
 }
 
@@ -289,7 +290,7 @@ a.voltar {
   font-size: 1rem;
 }
 
-.secao-posts{
+.secao-posts {
   padding: 0;
 }
 
@@ -379,25 +380,25 @@ a.voltar {
   width: 100%;
 }
 
-hr{
+hr {
   color: #333333;
   margin: 1px 1px 25px 1px;
 }
 
-.fotoinfo{
+.fotoinfo {
   display: flex;
-    gap: 15px;
-    align-items: center;
-  }
+  gap: 15px;
+  align-items: center;
+}
 
 @media (max-width: 768px) {
 
-  .topo-sala{
+  .topo-sala {
     display: flex;
     flex-direction: column;
   }
 
-  .fotoinfo{
+  .fotoinfo {
     display: flex;
     align-items: center;
     gap: 15px;

@@ -36,7 +36,7 @@ async function criar() {
   }
 
   try {
-    // Requisição POST para o JSON Server
+  
     const resposta = await fetch('http://localhost:3000/salas', {
       method: 'POST',
       headers: {

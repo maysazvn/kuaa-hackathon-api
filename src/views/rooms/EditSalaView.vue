@@ -9,7 +9,7 @@ const descricao = ref('')
 const banner = ref('')
 const sala = ref(null)
 
-// Carrega os dados atuais da sala da API
+
 onMounted(async () => {
     try {
         const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`)
@@ -33,7 +33,7 @@ async function edit() {
     }
 
     try {
-        // Envia a requisição PUT para atualizar o recurso completo
+
         const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`, {
             method: 'PUT',
             headers: {

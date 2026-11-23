@@ -9,16 +9,7 @@
       "banner": "",
       "status": 1,
       "usuarioCriador": "Gabriel",
-      "participantes": 12
-    },
-    {
-      "nome": "a",
-      "desc": "a",
-      "banner": "https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg",
-      "status": 1,
-      "usuarioCriador": "a",
-      "participantes": 1,
-      "id": "XVtshdRgU44"
+      "participantes": 17
     },
     {
       "nome": "sala maneira",
@@ -32,69 +23,34 @@
   ],
   "salasUsuario": [
     {
-      "id": "1",
-      "salaId": "1",
-      "usuario": "Gabriel"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "7uaOmgCo8KE"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "IVpfA5YHQP4"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "IGPgh2YuNKQ"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "n1tnmPBGE80"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "5OGOzebflNI"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "9IeFP9UwC0g"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "MOb0r7k2MNM"
-    },
-    {
-      "salaId": "undefined",
-      "usuario": "a",
-      "id": "mnEeham5P3Y"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "5TBkq8czPH4"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "TucITwj7uBA"
-    },
-    {
-      "salaId": "1",
-      "usuario": "a",
-      "id": "3S75u2wWDkE"
-    },
-    {
       "salaId": "1",
       "usuario": "a",
       "id": "Mmk4kqSw7Z8"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "dQgexu-9YYI"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "XZpAFadt9QE"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "L2gTPpjbUk8"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "DeKj6n9N0gs"
+    },
+    {
+      "salaId": "1",
+      "usuario": "a",
+      "id": "VbLyLvLA6HA"
     }
   ],
   "users": [],
