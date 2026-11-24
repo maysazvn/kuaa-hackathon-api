@@ -36,7 +36,7 @@ async function criar() {
   }
 
   try {
-  
+    
     const resposta = await fetch('http://localhost:3000/salas', {
       method: 'POST',
       headers: {
@@ -50,7 +50,20 @@ async function criar() {
     }
 
     const dadosCriados = await resposta.json()
-    console.log('Sala criada com sucesso:', dadosCriados)
+
+    
+    await fetch('http://localhost:3000/salasUsuario', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        salaId: String(dadosCriados.id),
+        usuario: userReal.value
+      })
+    })
+
+    console.log('Sala criada e vinculada com sucesso:', dadosCriados)
 
     nome.value = ''
     descricao.value = ''
