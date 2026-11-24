@@ -1,84 +1,177 @@
 <script setup>
 import { useRoute } from 'vue-router';
 import { computed } from 'vue';
-import { users } from './Users';
 import { ref } from 'vue';
-import { watchEffect } from 'vue';
-import { salas } from '@/data/salas';
 import { seguindo } from './Following';
 import { loginOut } from '../account/login/Loginout';
 import Postagens from '@/components/Postagens/Postagens.vue';
 import { postagens } from '@/data/postagens';
+import { onMounted } from 'vue';
 
 
 const route = useRoute();
+const API_URL = 'http://localhost:3000';
 
-// adicionei buscar salas
-function buscarSalasDoUsuario(idsSalas) {
-  if (!idsSalas) return [];
+const usuario = ref(null);
+const carregando = ref(true);
+const estaseguindo = ref(false);
 
-  const listaDeSalas = salas.value || salas;
-  return listaDeSalas.filter(sala => idsSalas.includes(sala.idSala));
+const anotacaoId = ref(null);
+const anotacao = ref('');
+const editandoAnotacao = ref(false);
+
+
+async function carregarUsuario() {
+  carregando.value = true;
+
+  try {
+    const respostaUser = await fetch(`${API_URL}/users/${route.params.id}`);
+    if (!respostaUser.ok) {
+      throw new Error('Usuário não encontrado');
+    }
+    usuario.value = await respostaUser.json();
+
+    const respostaAnot = await fetch(`${API_URL}/anotacao`);
+    if (respostaAnot.ok) {
+      const listaAnotacoes = await respostaAnot.json();
+      
+      const anotacaoEncontrada = listaAnotacoes.find(
+        (item) => String(item.userId) === String(usuario.value.id)
+      );
+
+      if (anotacaoEncontrada) {
+        anotacao.value = anotacaoEncontrada.texto;
+        anotacaoId.value = anotacaoEncontrada.id;
+      } else {
+        anotacao.value = '';
+        anotacaoId.value = null;
+      }
+    }
+
+
+    const respostaSeguidores = await fetch(`${API_URL}/users/${usuario.value.id}`);
+    const dadosAtualizados = await respostaSeguidores.json();
+    usuario.value.seguidores = dadosAtualizados.seguidores;
+
+  } catch (error) {
+    console.error('Erro ao carregar os dados:', error);
+    usuario.value = null;
+  } finally {
+    carregando.value = false;
+  }
 }
 
-const usuario = computed(() => {
-  return users.find(
-    (usuario) => usuario.id === Number(route.params.id),
-  )
-})
+onMounted(() => {
+  carregarUsuario();
+});
 
 const postsUsuario = computed(() => {
-  return postagens.value.filter((post) => post.autorID === usuario.value.id)
-})
-
-// const suarios = JSON.parse(localStorage.getItem('salasEntradas')) || [];
-
-// const mostrarSala = ref(localStorage.getItem('mostrarSala?') || 'sim')
-let estaseguindo = ref(false);
-
-watchEffect(() => {
-  if (usuario.value) {
-    const salvo = localStorage.getItem(`seguindo_${usuario.value.id}`);
-    estaseguindo.value = salvo === 'true';
-  }
+  if (!usuario.value) return [];
+  const listaPosts = postagens.value || postagens;
+  return listaPosts.filter((post) => post.autorID === usuario.value.id);
 });
 
 const mensagemSeguir = computed(() => (estaseguindo.value ? 'Seguindo' : 'Seguir'));
 
-function seguir() {
-  if(loginOut.value == 'ativo'){
+async function seguir() {
+  if (loginOut.value !== 'ativo') {
+    alert('Faça login para seguir!');
+    return;
+  }
   if (!usuario.value) return;
 
-  const segui = users.find(usu => usu.id === usuario.value.id)
+  try {
+    const novoEstado = !estaseguindo.value;
+    const novosSeguidores = novoEstado ? usuario.value.seguidores + 1 : usuario.value.seguidores - 1;
 
-  if (!estaseguindo.value) {
+    const resposta = await fetch(`${API_URL}/users/${usuario.value.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ seguidores: novosSeguidores })
+    });
 
-    estaseguindo.value = true;
-    localStorage.setItem(`seguindo_${usuario.value.id}`, 'true');
+    if (!resposta.ok) throw new Error('Não foi possível atualizar os seguidores');
 
+    usuario.value = await resposta.json();
+    estaseguindo.value = novoEstado;
+    seguindo.value += novoEstado ? 1 : -1;
 
-    segui.seguidores += 1;
-    seguindo.value += 1;
-    localStorage.setItem('total_seguindo', seguindo.value);
-    console.log(seguindo)
-
-  } else {
-    estaseguindo.value = false;
-    localStorage.setItem(`seguindo_${usuario.value.id}`, 'false');
-
-
-    segui.seguidores -= 1
-    seguindo.value -= 1;
-    localStorage.setItem('total_seguindo', seguindo.value);
-    console.log(seguindo)
-
+  } catch (error) {
+    console.error('Erro ao atualizar seguidores:', error);
+    alert('Erro ao atualizar seguidores!');
   }
-}else{
-  alert('Faça login para seguir!')
 }
+
+
+async function salvarAnotacao() {
+  if (!usuario.value) return;
+
+  try {
+    let url = `${API_URL}/anotacao`;
+    let metodo = 'POST';
+    let corpo = {
+      userId: usuario.value.id,
+      texto: anotacao.value
+    };
+
+
+    if (anotacaoId.value) {
+      url = `${API_URL}/anotacao/${anotacaoId.value}`;
+      metodo = 'PUT';
+    }
+
+    const resposta = await fetch(url, {
+      method: metodo,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(corpo)
+    });
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível processar a requisição de anotação.');
+    }
+
+    const dadoSalvo = await resposta.json();
+    anotacaoId.value = dadoSalvo.id;
+
+  } catch (error) {
+    console.error('Erro ao submeter anotação:', error);
+    alert('Erro ao salvar a anotação!');
+  }
+  editandoAnotacao.value = false;
 }
+editandoAnotacao.value = false;
+
+async function limparAnotacao() {
+  if (!anotacaoId.value) {
+    anotacao.value = '';
+    editandoAnotacao.value = false;
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`${API_URL}/anotacao/${anotacaoId.value}`, {
+      method: 'DELETE'
+    });
+
+    if (!resposta.ok) {
+      throw new Error('Não foi possível deletar o registro.');
+    }
+
+    anotacao.value = '';
+    anotacaoId.value = null;
+    editandoAnotacao.value = false; 
+
+  } catch (error) {
+    console.error('Erro ao deletar anotação:', error);
+    alert('Erro ao limpar a anotação!');
+  }
+}
+
 
 </script>
+
 
 <template>
 
@@ -87,12 +180,33 @@ function seguir() {
       <img v-if="usuario.banner" :src="usuario.banner" class="banner" />
       <img v-if="usuario.pfp" :src="usuario.pfp" class="foto" />
 
-   
+        <div 
+          class="campo-anotacao"
+          :class="{ 'com-texto': anotacao && anotacao.trim().length > 0 }"
+          @click="editandoAnotacao = true"
+        >
+          <textarea
+            v-model="anotacao"
+            @focus="editandoAnotacao = true"
+            class="descricao"
+            placeholder="Essa pessoa é..."
+            maxlength="100"
+          ></textarea>
+          <div v-if="editandoAnotacao" class="rodape-anotacao">
+            <span class="contador">{{ anotacao ? anotacao.length : 0 }}/100</span>
+            <div class="botoes-anotacao">
+              <button type="button" @click.stop="limparAnotacao">Limpar</button>
+              <button type="button" @click.stop="salvarAnotacao">Salvar</button>
+            </div>
+          </div>
+        </div>
 
 
       <div class="acoesPerfil">
         <button class="seguirUsuario" v-on:click="seguir()">{{ mensagemSeguir }}</button>
       </div>
+
+      
 
      
      
@@ -115,7 +229,7 @@ function seguir() {
 
         <div class="salas" v-show="usuario.mostrarSala === 'sim'">
         <ul class="listaSalas">
-          <li v-for="sala in buscarSalasDoUsuario(usuario.salas)" :key="sala.idSala" class="cardSala">
+         <li v-for="sala in salasDoUsuario" :key="sala.idSala" class="cardSala">
              <RouterLink :to="`/salas/${sala.idSala}`">
               <span class="nomesala">{{ sala.nome }}</span>
             </RouterLink>
@@ -342,5 +456,75 @@ hr{
     padding: 10px 15px;
   }
 
+}
+
+.campo-anotacao {
+  position: absolute;
+  top: 10px;
+  left: -270px;
+  z-index: 20;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #d9d9d9;
+  border-radius: 28px;
+  padding: 16px 20px;
+}
+
+.campo-anotacao::before {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 225px;
+  width: 16px;
+  height: 16px;
+  background-color: #d9d9d9;
+
+  border-radius: 50%;
+
+}
+
+.campo-anotacao::after {
+  content: "";
+  position: absolute;
+  bottom: -24px;
+  left: 240px;
+  width: 9px;
+  height: 9px;
+  background-color: #d9d9d9;
+
+  border-radius: 50%;
+}
+
+.campo-anotacao .descricao {
+  width: 100%;
+  min-height: 35px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: #333333;
+}
+
+.campo-anotacao .contador {
+  font-size: 11px;
+  color: #777777;
+  text-align: right;
+}
+
+.campo-anotacao button {
+  cursor: pointer;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background-color: #f4f4f4;
+  transition: background-color 0.2s;
+}
+
+.campo-anotacao button:hover {
+  background-color: #e0e0e0;
 }
 </style>

@@ -11,6 +11,7 @@
     "lint:oxlint": "oxlint . --fix",
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
+    "server": "npx json-server db.json"
     "test": "echo \"Error: no test specified\" && exit 1", 
     "api": "json-server db.json"
   },
