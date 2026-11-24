@@ -35,7 +35,6 @@ async function carregarUsuario() {
     if (respostaAnot.ok) {
       const listaAnotacoes = await respostaAnot.json();
       
-      // Compara convertendo ambos para String para evitar erro entre 1 e "1"
       const anotacaoEncontrada = listaAnotacoes.find(
         (item) => String(item.userId) === String(usuario.value.id)
       );
