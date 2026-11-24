@@ -8,6 +8,7 @@ import { pegarIDUsuario } from '@/views/account/login/UserReal'
 import { users } from './user/Users'
 import { salas } from '@/data/salas'
 
+const API_URL = 'http://localhost:3000';
 
 function usuarioEstaNaSala(salaIdDoPost) {
   for (let sala of salasUsuario.value) {
@@ -31,39 +32,59 @@ function pegarFotoUsuario(autorID) {
 }
 
 const postsTimeline = computed(() => {
-  return postagens.value.filter((post) => {
-    const inscrito = usuarioEstaNaSala(post.salaId);
-    const viral = post.curtidas >= 150;
-    const meuPost = post.autorID === pegarIDUsuario()
-
-    return inscrito || viral || meuPost
-  })
+  return [...postagens.value]
+    .filter((post) => {
+      const inscrito = usuarioEstaNaSala(post.salaId)
+      const viral = post.curtidas >= 150
+      const meuPost = Number(post.autorID) === Number(pegarIDUsuario())
+      return inscrito || viral || meuPost
+    })
+    .sort((a, b) => (b.criadoEm || 0) - (a.criadoEm || 0))
 })
+
+console.log(pegarIDUsuario(), typeof pegarIDUsuario())
+console.log(postagens.value.map(p => [p.id, p.autorID, p.salaId]))
 
 const conteudoRapido = ref('')
 const salaSelecionada = ref(null)
 
-function criarPostRapido() {
+async function criarPostRapido() {
   if (!conteudoRapido.value.trim()) {
     alert('Escreva algo antes de postar!')
+    return
   }
 
-
-  let maiorId = Math.max(...postagens.value.map((item) => item.id))
+  if (!salaSelecionada.value) {
+  alert('Escolha uma sala!')
+  return
+}
 
   const novoPost = {
     titulo: '',
     conteudo: conteudoRapido.value,
-    autorID: pegarIDUsuario(),
+    autorID: Number(pegarIDUsuario()),
     data: new Date().toLocaleDateString('pt-BR'),
-    id: maiorId + 1,
     salaId: Number(salaSelecionada.value),
+    imagem: '',
+    curtido: false,
     curtidas: 0,
+    salvou: false,
     salvos: 0,
+    criadoEm: Date.now(),
   }
 
-  postagens.value.unshift(novoPost)
-  localStorage.setItem('postagens', JSON.stringify(postagens.value))
+  const resposta = await fetch(`${API_URL}/postagens`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(novoPost),
+  })
+
+  const postCriado = await resposta.json()
+
+  postagens.value.unshift(postCriado)
+  /*localStorage.setItem('postagens', JSON.stringify(postagens.value))*/
 
   conteudoRapido.value = ''
   salaSelecionada.value = null
@@ -72,6 +93,7 @@ function criarPostRapido() {
 const salasVisiveis = computed(() =>
   salasUsuario.value.filter(s => salas.value.some(x => x.idSala === s.idSala))
 )
+
 </script>
 
 <template>
@@ -79,18 +101,14 @@ const salasVisiveis = computed(() =>
     <div class="postar" v-if="loginOut === 'ativo'">
       <div class="imginput">
         <img :src="pegarFotoUsuario(pegarIDUsuario())" alt="icone de perfil do usuario" />
-        <input type="text" placeholder="Qual é seu tema de estudo agora?" v-model="conteudoRapido"/>
+        <input type="text" placeholder="Qual é seu tema de estudo agora?" v-model="conteudoRapido" />
       </div>
 
       <div class="botao">
         <div class="botoesSala">
-          <span
-            v-for="sala in salasVisiveis"
-            :key="sala.idSala || sala.id"
-            class="salaItem"
+          <span v-for="sala in salasVisiveis" :key="sala.idSala || sala.id" class="salaItem"
             :class="{ ativa: salaSelecionada === (sala.idSala || sala.id) }"
-            @click="salaSelecionada = sala.idSala || sala.id"
-          >
+            @click="salaSelecionada = sala.idSala || sala.id">
             {{ sala.nome }}
           </span>
         </div>
@@ -140,7 +158,7 @@ const salasVisiveis = computed(() =>
   margin: 2vw auto;
 }
 
-.postar .semPosts{
+.postar .semPosts {
   width: 100%;
   text-align: center;
   padding: 10px 0;
@@ -252,20 +270,20 @@ const salasVisiveis = computed(() =>
 
 @media (max-width: 768px) {
 
-    .container{
+  .container {
     padding: 0;
   }
 
 
-  .semPosts{
+  .semPosts {
     width: 200px;
   }
 
-  .semPosts p{
+  .semPosts p {
     font-size: 20px;
   }
 
-  .postar{
+  .postar {
     width: 100%;
   }
 
@@ -280,10 +298,10 @@ const salasVisiveis = computed(() =>
   }
 
   .imginput img {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-}
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+  }
 }
 
 
