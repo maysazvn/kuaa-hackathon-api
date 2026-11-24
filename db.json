@@ -1,11 +1,176 @@
 {
-  "comentariosReais":[],
-  "postagens":[],
-  "salas":[],
-  "salasUsuario":[],
-  "users":[],
-  "login":[],
-
-
+  "comentariosReais": [],
+  "postagens": [],
+  "salas": [],
+  "salasUsuario": [],
+  "users": [],
+  "login": [
+    {
+      "nomeUser": "h",
+      "email": "halana@gmail.com",
+      "id": "SIJfHLMc3V4",
+      "senha": "h"
+    },
+    {
+      "nomeUser": "g",
+      "email": "halana@gmail.com",
+      "id": "-7AG0lp4800",
+      "senha": "g"
+    }
+  ],
+  "comentarios": [
+    {
+      "id": "1",
+      "postId": "1",
+      "texto": "Bobby, quantas faculdades você teve que fazer para pensar nisso?",
+      "autorID": "25",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "2",
+      "postId": "4",
+      "texto": "cara, eu tava precisando também.",
+      "autorID": "11",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "3",
+      "postId": "4",
+      "texto": "Você precisa dormir para ter bons estudos!",
+      "autorID": "3",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "4",
+      "postId": "6",
+      "texto": "pq vc digita assim",
+      "autorID": "11",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "5",
+      "postId": "6",
+      "texto": "Posso te ajudar na parte matemática... O que você prefere? estudar comigo por 92 horas seguidas ou comer gelatina de abacaxi?",
+      "autorID": "14",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "6",
+      "postId": "8",
+      "texto": "ciência todo dia é o caminho",
+      "autorID": "12",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "7",
+      "postId": "8",
+      "texto": "PedroLooser sempre trazendo conteudo bom",
+      "autorID": "1",
+      "curtido": false,
+      "curtidas": 0
+    },
+    {
+      "id": "8",
+      "postId": "2",
+      "texto": "N sei, espero poder ter de ajudado",
+      "autorID": "17",
+      "curtido": false,
+      "curtidas": 4
+    },
+    {
+      "id": "9",
+      "postId": "2",
+      "texto": "Eu fiz um pacto para entender isso... Fale com o senhor da casa 67 a meia noite e ele irá te ajudar",
+      "autorID": "5",
+      "curtido": false,
+      "curtidas": 2
+    },
+    {
+      "id": "10",
+      "postId": "3",
+      "texto": "Para atuar bem precisa de ter nascido em 17 de março de 1979",
+      "autorID": "12",
+      "curtido": false,
+      "curtidas": 3
+    },
+    {
+      "id": "11",
+      "postId": "5",
+      "texto": "Vai para fora e veja as vacas, elas ajudam",
+      "autorID": "8",
+      "curtido": false,
+      "curtidas": 5
+    },
+    {
+      "id": "12",
+      "postId": "5",
+      "texto": "Estatística aplicada à biologia me derrubou na prova passada kkkkk",
+      "autorID": "19",
+      "curtido": false,
+      "curtidas": 1
+    },
+    {
+      "id": "13",
+      "postId": "7",
+      "texto": "Eu disse",
+      "autorID": "22",
+      "curtido": false,
+      "curtidas": 12
+    },
+    {
+      "id": "14",
+      "postId": "7",
+      "texto": "O que aconteceu com Villela?",
+      "autorID": "14",
+      "curtido": false,
+      "curtidas": 7
+    },
+    {
+      "id": "15",
+      "postId": "9",
+      "texto": "????",
+      "autorID": "25",
+      "curtido": false,
+      "curtidas": 9
+    },
+    {
+      "id": "16",
+      "postId": "9",
+      "texto": "A pior coisa que fiz foi ter entrado na aula de poçoes",
+      "autorID": "17",
+      "curtido": false,
+      "curtidas": 4
+    },
+    {
+      "id": "17",
+      "postId": "10",
+      "texto": "VSFD",
+      "autorID": "11",
+      "curtido": false,
+      "curtidas": 15
+    },
+    {
+      "id": "18",
+      "postId": "10",
+      "texto": "mds",
+      "autorID": "3",
+      "curtido": false,
+      "curtidas": 6
+    },
+    {
+      "id": "19",
+      "postId": "11",
+      "texto": "Valeu pela dica! Mas isso aí é geometria plana, na espacial a gente usa volume (tipo cilindro e cone).",
+      "autorID": "14",
+      "curtido": false,
+      "curtidas": 8
+    }
+  ],
   "$schema": "./node_modules/json-server/schema.json"
 }
