@@ -1,44 +1,63 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
-import { computed, ref } from 'vue'
-import { salas } from '@/data/salas'
+import { computed, ref, onMounted } from 'vue'
 import ButtonEnter from '@/components/ButtonEnter.vue'
-import { loginOut } from '../account/login/Loginout'
 import Postagens from '@/components/Postagens/Postagens.vue'
 import { postagens } from '@/data/postagens'
 import { users } from '../user/Users'
 import { userReal } from '../account/login/UserReal'
+
 defineProps(['idSala', 'nome', 'participantes', 'desc', 'usuarioCriador', 'status', 'banner'])
 
 const route = useRoute()
 const router = useRouter()
 const popupExcluir = ref(false)
 const menuAberto = ref(false)
+const sala = ref(null)
 
-const postsSala = computed(() => {
-  return postagens.value.filter((post) => post.salaId === Number(sala.value.idSala))
+
+onMounted(async () => {
+  try {
+    const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`)
+    if (resposta.ok) {
+      sala.value = await resposta.json()
+    } else {
+      sala.value = null
+    }
+  } catch (error) {
+    console.error('Erro ao buscar sala:', error)
+  }
 })
 
-console.log('ID da rota:', route.params.id)
-console.log('Salas:', salas.value)
+const postsSala = computed(() => {
+  if (!sala.value) return []
+  return postagens.value.filter((post) => post.salaId === Number(sala.value.id))
+})
 
 const criador = computed(() => users.find((usuario) => usuario.nome === sala.value?.usuarioCriador))
-const sala = computed(() => salas.value.find((s) => s.idSala == route.params.id))
-function confirmarEx() {
-  const index = salas.value.findIndex((s) => s.idSala == route.params.id)
-  if (index !== -1) {
-    salas.value.splice(index, 1)
+
+async function confirmarEx() {
+  try {
+
+    const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`, {
+      method: 'DELETE'
+    })
+
+    if (resposta.ok) {
+      popupExcluir.value = false
+      router.push('/explore')
+    } else {
+      alert('Erro ao excluir a sala.')
+    }
+  } catch (error) {
+    console.error('Erro na exclusão:', error)
   }
-
-  localStorage.removeItem("salas");
-
-  popupExcluir.value = false
-  router.push('/explore')
 }
+
 function excluirSala() {
   popupExcluir.value = true
-
 }
+
 function editarSala() {
   router.push(`/salas/${route.params.id}/editar`)
 }
@@ -47,73 +66,64 @@ const statusTexto = computed(() => {
   if (sala.value?.status == 1) {
     return 'Ativo'
   }
-
   return 'Inativo'
 })
-
-console.log('Sala encontrada:', sala.value)
 </script>
+
 <template>
   <div class="container-sala" v-if="sala">
     <div class="header-pagina">
       <div class="titulo">
         <RouterLink to="/explore" class="voltar">
-          <font-awesome-icon icon="chevron-left"></font-awesome-icon> Perfil de sala</RouterLink
-        >
+          <font-awesome-icon icon="chevron-left"></font-awesome-icon> Perfil de sala
+        </RouterLink>
       </div>
     </div>
 
     <div class="card-sala">
       <div class="topo-sala">
         <div class="fotoinfo">
-        <img :src="sala.banner" class="foto-sala" />
-
-        <div class="info-sala">
-          <h2 class="nome-sala">{{ sala.nome }}</h2>
-          <div class="metadados">
-            <div>
-              <RouterLink v-if="sala.usuarioCriador === userReal" :to="`/profile`">
-                <span>CRIADOR</span> {{ sala.usuarioCriador }}
-              </RouterLink>
-              <RouterLink v-else :to="`/otherProfile/${criador.id}`">
-                <span>CRIADOR</span> {{ sala.usuarioCriador }}
-              </RouterLink>
-            </div>
-
-            <p><span>STATUS</span> {{ statusTexto }}</p>
+          <img :src="sala.banner" class="foto-sala" />
+          <div class="info-sala">
+            <h2 class="nome-sala">{{ sala.nome }}</h2>
+            <div class="metadados">
+              <div>
+                <RouterLink v-if="sala.usuarioCriador === userReal" :to="`/profile`">
+                  <span>CRIADOR</span> {{ sala.usuarioCriador }}
+                </RouterLink>
+                <RouterLink v-else :to="`/otherProfile/${criador?.id}`">
+                  <span>CRIADOR</span> {{ sala.usuarioCriador }}
+                </RouterLink>
+              </div>
+              <p><span>STATUS</span> {{ statusTexto }}</p>
             </div>
           </div>
         </div>
 
         <div class="acoes-sala">
-          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
-          <div class="menu">
-          
-          
-
-            <div class="menu" v-if="sala.usuarioCriador === userReal">
-              <button class="menubotao" @click="menuAberto = !menuAberto">...</button>
-              <div class="menuaberto" v-if="menuAberto">
-                <button @click="editarSala">Editar sala</button>
-                <button @click="excluirSala">Apagar sala</button>
-              </div>
+          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal"
+            @atualizar-participantes="(novaQtd) => sala.participantes = novaQtd" />
+          <div class="menu" v-if="sala.usuarioCriador === userReal">
+            <button class="menubotao" @click="menuAberto = !menuAberto">...</button>
+            <div class="menuaberto" v-if="menuAberto">
+              <button @click="editarSala">Editar sala</button>
+              <button @click="excluirSala">Apagar sala</button>
             </div>
           </div>
         </div>
-      </div>  
+      </div>
 
-        <p class="descricao">{{ sala.desc }}</p>
+      <p class="descricao">{{ sala.desc }}</p>
 
-        <div class="membros">
-          <span>{{ sala.participantes }} membros</span>
-        </div>
+      <div class="membros">
+        <span>{{ sala.participantes }} membros</span>
+      </div>
 
-        <div class="secao-posts">
-          <h2>Posts</h2>
-          <hr />
-          <Postagens :posts="postsSala"></Postagens>
-        </div>
-      
+      <div class="secao-posts">
+        <h2>Posts</h2>
+        <hr />
+        <Postagens :posts="postsSala"></Postagens>
+      </div>
 
       <div v-if="popupExcluir" class="telapopup">
         <div class="popup">
@@ -211,7 +221,7 @@ a.voltar {
   cursor: pointer;
 }
 
-.btn-entrar span{
+.btn-entrar span {
   font-weight: bold;
 }
 
@@ -280,7 +290,7 @@ a.voltar {
   font-size: 1rem;
 }
 
-.secao-posts{
+.secao-posts {
   padding: 0;
 }
 
@@ -370,25 +380,25 @@ a.voltar {
   width: 100%;
 }
 
-hr{
+hr {
   color: #333333;
   margin: 1px 1px 25px 1px;
 }
 
-.fotoinfo{
+.fotoinfo {
   display: flex;
-    gap: 15px;
-    align-items: center;
-  }
+  gap: 15px;
+  align-items: center;
+}
 
 @media (max-width: 768px) {
 
-  .topo-sala{
+  .topo-sala {
     display: flex;
     flex-direction: column;
   }
 
-  .fotoinfo{
+  .fotoinfo {
     display: flex;
     align-items: center;
     gap: 15px;

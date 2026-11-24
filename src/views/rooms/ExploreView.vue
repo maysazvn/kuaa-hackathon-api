@@ -1,35 +1,43 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import CartSala from '@/components/cart/CartSala.vue'
 import ButtonEnter from '@/components/ButtonEnter.vue';
-import { salas } from '@/data/salas'
 import { loginOut } from '../account/login/Loginout';
 import { userReal } from '../account/login/UserReal';
+
+
+const salas = ref([])
+
+
+onMounted(async () => {
+  try {
+    const resposta = await fetch('http://localhost:3000/salas')
+    if (resposta.ok) {
+      salas.value = await resposta.json()
+    } else {
+      console.error('Erro ao carregar as salas')
+    }
+  } catch (error) {
+    console.error('Erro de conexão com o servidor:', error)
+  }
+})
 </script>
 
 <template>
   <div class="container">
     <div class="titulo">
-      <RouterLink to="/" class="voltar"> <font-awesome-icon icon="chevron-left"></font-awesome-icon> Explorar salas</RouterLink>
+      <RouterLink to="/" class="voltar"> <font-awesome-icon icon="chevron-left"></font-awesome-icon> Explorar salas
+      </RouterLink>
     </div>
     <section class="salas">
-      <CartSala
-        v-for="sala in salas"
-        :key="sala.idSala"
-        :idSala="sala.idSala"
-        :nome="sala.nome"
-        :participantes="sala.participantes"
-        :desc="sala.desc"
-        :usuarioCriador="sala.usuarioCriador"
-        :banner="sala.banner"
-        :status="sala.status"
-      >
-      <div class="nav">
-      
-          <RouterLink :to="`/salas/${sala.idSala}`" class="visualizar"> Visualizar </RouterLink>
-        <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal" />
-       
-       
-      </div>
+      <CartSala v-for="sala in salas" :key="sala.id" :idSala="sala.id" :nome="sala.nome"
+        :participantes="sala.participantes" :desc="sala.desc" :usuarioCriador="sala.usuarioCriador"
+        :banner="sala.banner" :status="sala.status">
+        <div class="nav">
+          <RouterLink :to="`/salas/${sala.id}`" class="visualizar"> Visualizar </RouterLink>
+          <ButtonEnter :sala="sala" v-if="sala.usuarioCriador != userReal"
+            @atualizar-participantes="(novaQtd) => sala.participantes = novaQtd" />
+        </div>
       </CartSala>
     </section>
   </div>
@@ -41,7 +49,7 @@ import { userReal } from '../account/login/UserReal';
   margin: 0 auto;
 }
 
-a.voltar{
+a.voltar {
   font-size: 2rem;
   font-family: 'Prompt', sans-serif;
   font-weight: bold;
@@ -62,14 +70,14 @@ a.voltar{
   font-size: 1.2rem;
 }
 
-.nav{
+.nav {
   display: flex;
   justify-content: center;
   gap: 5px;
   padding: 5px;
 }
 
-a.visualizar{
+a.visualizar {
   background: #F8D76B;
   font-weight: bold;
   color: #1e1e1e;
@@ -107,20 +115,20 @@ a.visualizar,
   justify-content: center;
 }
 
-button{
+button {
   background: #F8D76B;
   font-weight: bold;
   border-radius: 10px;
   padding: 1px 10px;
 }
 
-a.visualizar:hover{
+a.visualizar:hover {
   opacity: 0.9;
   transform: scale(0.95);
   transition: .2s;
 }
 
-button:hover{
+button:hover {
   opacity: 0.9;
   transform: scale(0.95);
   transition: .2s;
@@ -132,11 +140,11 @@ button:hover{
 
 @media (max-width: 768px) {
 
-  .salas{
+  .salas {
     padding: 20px 15px;
   }
 
-  .nav{
+  .nav {
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -145,11 +153,11 @@ button:hover{
     align-items: center;
   }
 
-  a.visualizar, .btn-entrar{
+  a.visualizar,
+  .btn-entrar {
     width: 200px;
     padding: 10px 12px;
   }
 
 }
-
 </style>

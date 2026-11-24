@@ -1,76 +1,106 @@
 <script setup>
-import { salas } from '@/data/salas';
-import { ref, computed, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+
 const route = useRoute()
 const router = useRouter()
 const nome = ref('')
 const descricao = ref('')
 const banner = ref('')
+const sala = ref(null)
 
-const sala = computed(() =>
-    salas.value.find(s => s.idSala == route.params.id)
-)
 
-function edit() {
-    sala.value.nome = nome.value
-    sala.value.desc = descricao.value
-    sala.value.banner = banner.value
+onMounted(async () => {
+    try {
+        const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`)
+        if (resposta.ok) {
+            sala.value = await resposta.json()
+            nome.value = sala.value.nome
+            descricao.value = sala.value.desc
+            banner.value = sala.value.banner
+        }
+    } catch (error) {
+        console.error('Erro ao buscar dados para edição:', error)
+    }
+})
+
+async function edit() {
+    const dadosAtualizados = {
+        ...sala.value,
+        nome: nome.value,
+        desc: descricao.value,
+        banner: banner.value
+    }
+
+    try {
+
+        const resposta = await fetch(`http://localhost:3000/salas/${route.params.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dadosAtualizados)
+        })
+
+        if (resposta.ok) {
+            router.push(`/salas/${route.params.id}`)
+        } else {
+            alert('Erro ao atualizar a sala.')
+        }
+    } catch (error) {
+        console.error('Erro na atualização:', error)
+    }
+}
+
+function cancelar() {
     router.push(`/salas/${route.params.id}`)
 }
-function cancelar() {
-    router.push(`/salas/${sala.value.idSala}`)
-}
-watch(sala, (novaSala) => {
-    if (novaSala) {
-        nome.value = novaSala.nome
-        descricao.value = novaSala.desc
-        banner.value = novaSala.banner
-    }
-}, { immediate: true })
 </script>
+
 <template>
     <div class="container-edit">
-    <div class="header-pagina">
-      <div class="titulo">
-      <RouterLink :to="`/salas/${route.params.id}`" class="voltar"> <font-awesome-icon icon="chevron-left"></font-awesome-icon> Editar sala</RouterLink>
-    </div>
-    </div>
-
-    <div class="card-editar">
-      <div class="conteudo-editar">
-        <div class="area-imagem">
-          <img :src="banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'" class="foto-preview" alt="Preview da imagem" />
-          <div class="input-imagem-container">
-            <input type="text" v-model="banner" placeholder="URL da Imagem" class="input-url" />
-          </div>
+        <div class="header-pagina">
+            <div class="titulo">
+                <RouterLink :to="`/salas/${route.params.id}`" class="voltar"> 
+                    <font-awesome-icon icon="chevron-left"></font-awesome-icon> Editar sala
+                </RouterLink>
+            </div>
         </div>
 
-        <div class="formulario">
-          <div class="campo">
-            <label>Nome da sala</label>
-            <div class="input-box">
-              <input type="text" v-model="nome" maxlength="25" placeholder="Psikolera" />
-              <span class="contador">{{ nome.length }}/25</span>
-            </div>
-          </div>
+        <div class="card-editar">
+            <div class="conteudo-editar">
+                <div class="area-imagem">
+                    <img :src="banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'" class="foto-preview" alt="Preview da imagem" />
+                    <div class="input-imagem-container">
+                        <input type="text" v-model="banner" placeholder="URL da Imagem" class="input-url" />
+                    </div>
+                </div>
 
-          <div class="campo">
-            <label>Descrição</label>
-            <div class="input-box">
-              <textarea v-model="descricao" maxlength="300" rows="4" placeholder="Descrição da sala..."></textarea>
-              <span class="contador">{{ descricao.length }}/300</span>
+                <div class="formulario">
+                    <div class="campo">
+                        <label>Nome da sala</label>
+                        <div class="input-box">
+                            <input type="text" v-model="nome" maxlength="25" placeholder="Psikolera" />
+                            <span class="contador">{{ nome.length }}/25</span>
+                        </div>
+                    </div>
+
+                    <div class="campo">
+                        <label>Descrição</label>
+                        <div class="input-box">
+                            <textarea v-model="descricao" maxlength="300" rows="4" placeholder="Descrição da sala..."></textarea>
+                            <span class="contador">{{ descricao.length }}/300</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
+
+            <div class="botoes-acoes">
+                <button @click="edit" class="btn-confirmar">Confirmar</button>
+                <button @click="cancelar" class="btn-cancelar">Cancelar</button>
+            </div>
         </div>
-      </div>
-
-      <div class="botoes-acoes">
-        <button @click="edit" class="btn-confirmar">Confirmar</button>
-        <button @click="cancelar" class="btn-cancelar">Cancelar</button>
-      </div>
     </div>
-  </div>
 </template>
 
 <style scoped>

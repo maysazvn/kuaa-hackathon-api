@@ -1,11 +1,9 @@
-<!-- read salas/comunidades -->
 <script setup>
 import { useRouter } from 'vue-router'
-import { salas } from '@/data/salas'
 import { ref } from 'vue'
 import { userReal } from '../account/login/UserReal'
 import { loginOut } from '../account/login/Loginout'
-import { salasUsuario } from '@/data/salasUsuario'
+
 const router = useRouter()
 const nome = ref('')
 const descricao = ref('')
@@ -13,117 +11,96 @@ const banner = ref('')
 const coisa = ref(1)
 const membros = ref(0)
 const mensagem = 'Algum campo obrigatorio deixou de ser prenchido'
+
 function cancelar() {
   router.push('/')
 }
-function criar() {
- if (nome.value === '' || descricao.value === '') {
-   alert(mensagem)
-   return
- } else {
 
-    if(banner.value === "") {
-      banner.value = "https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg"
+async function criar() {
+  if (nome.value === '' || descricao.value === '') {
+    alert(mensagem)
+    return
+  }
+
+  if (banner.value === "") {
+    banner.value = "https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg"
+  }
+
+  const novaSala = {
+    nome: nome.value,
+    desc: descricao.value,
+    banner: banner.value,
+    status: coisa.value,
+    usuarioCriador: userReal.value,
+    participantes: membros.value + 1,
+  }
+
+  try {
+  
+    const resposta = await fetch('http://localhost:3000/salas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(novaSala)
+    })
+
+    if (!resposta.ok) {
+      throw new Error('Erro ao cadastrar a sala')
     }
 
-   const novaSala = {
-     idSala: Date.now(),
-     nome: nome.value,
-     desc: descricao.value,
-     banner: banner.value,
-     status: coisa.value,
-     usuarioCriador: userReal.value,
-     participantes: membros.value + 1,
-   }
-  
-   salas.value.push(novaSala)
-   salasUsuario.value.push(novaSala)
- }
- console.log(salas.value)
+    const dadosCriados = await resposta.json()
+    console.log('Sala criada com sucesso:', dadosCriados)
 
+    nome.value = ''
+    descricao.value = ''
+    banner.value = ''
 
- nome.value = ''
- descricao.value = ''
- banner.value = ''
-
-
- router.push('/')
+    router.push('/')
+  } catch (error) {
+    console.error('Erro:', error)
+    alert('Não foi possível conectar com o servidor para criar a sala.')
+  }
 }
-
-
-
-// function enviar(sal) {
-//   if (!estaNaSala(sal.idSala)) {
-//     salasUsuario.value.push(sal)
-//   }
-// }
-
-// function gerar() {
-//   banner.value
-// }
 </script>
 
 <template>
   <span v-if="loginOut === 'ativo'">
-
-
-  <div class="container">
-    <h1 class="tituloCriarSala"><font-awesome-icon icon="chevron-left" /> Criar Sala</h1>
-
-    <div class="criarSala">
-      <div class="conteudo">
-        <div class="img">
-          <img
-            class="imagem"
-            :src="
-              banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'
-            "
-          />
-
-          <input v-model="banner" placeholder="Insira o URL da imagem" />
-        </div>
-
-        <div class="campos">
-          <div class="campo">
-            <label>Nome da Sala</label>
-            <div class="input">
-              <input
-                v-model="nome"
-                type="text"
-                placeholder="Insira o nome da sala"
-                maxlength="25"
-              />
-              <span class="contador">{{ nome.length }}/25</span>
-            </div>
+    <div class="container">
+      <h1 class="tituloCriarSala"><font-awesome-icon icon="chevron-left" /> Criar Sala</h1>
+      <div class="criarSala">
+        <div class="conteudo">
+          <div class="img">
+            <img class="imagem" :src="banner || 'https://i.pinimg.com/736x/ed/b6/06/edb606bf10aad2fdfd3a854758ee0042.jpg'" />
+            <input v-model="banner" placeholder="Insira o URL da imagem" />
           </div>
-
-          <div class="campo">
-            <label>Descrição</label>
-            <div class="input">
-              <textarea
-                v-model="descricao"
-                type="text"
-                placeholder="Descreva a sala"
-                maxlength="300"
-              ></textarea>
-              <span class="contador">{{ descricao.length }}/300</span>
+          <div class="campos">
+            <div class="campo">
+              <label>Nome da Sala</label>
+              <div class="input">
+                <input v-model="nome" type="text" placeholder="Insira o nome da sala" maxlength="25" />
+                <span class="contador">{{ nome.length }}/25</span>
+              </div>
+            </div>
+            <div class="campo">
+              <label>Descrição</label>
+              <div class="input">
+                <textarea v-model="descricao" placeholder="Descreva a sala" maxlength="300"></textarea>
+                <span class="contador">{{ descricao.length }}/300</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="botoes">
-        <button @click="criar" class="btnCriar">Criar</button>
-        <button @click="cancelar" class="btnCancelar">Cancelar</button>
+        <div class="botoes">
+          <button @click="criar" class="btnCriar">Criar</button>
+          <button @click="cancelar" class="btnCancelar">Cancelar</button>
+        </div>
       </div>
     </div>
-  </div>
   </span>
-   <span v-else-if="loginOut === 'inativo'" class="mensagemSemLogin">
-    <p class="login">
-      Faça Login para criar salas!
-    </p>
-   </span>
+  <span v-else-if="loginOut === 'inativo'" class="mensagemSemLogin">
+    <p class="login">Faça Login para criar salas!</p>
+  </span>
 </template>
 
 <style scoped>
