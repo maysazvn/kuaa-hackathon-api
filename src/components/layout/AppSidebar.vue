@@ -22,7 +22,7 @@ import { computed } from 'vue'
 // functions /////////////////
 function validarLoginout() {
   if (loginOut.value == 'ativo') {
-    loginOut.value = 'inativo'
+    loginOut.value = 'processo'
     localStorage.setItem('login_status', 'inativo')
   } else {
     alert('Faça login primeiro!')

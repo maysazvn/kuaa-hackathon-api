@@ -159,38 +159,33 @@
       "id": "GbbSeiOBi-8"
     }
   ],
-  "salas": [],
+  "salas": [
+    {
+      "id": "1",
+      "nome": "Programação",
+      "desc": "Conversas sobre programação",
+      "banner": "",
+      "status": 1,
+      "usuarioCriador": "Gabriel",
+      "participantes": 26
+    },
+    {
+      "nome": "sala maneira",
+      "desc": "EBAA TA FUNCINAOND",
+      "banner": "https://i.pinimg.com/originals/c6/fa/56/c6fa56cf351a182b8b9c5db2251269f9.gif",
+      "status": 1,
+      "usuarioCriador": "a",
+      "participantes": 1,
+      "id": "bBt-ZUPrRDg"
+    }
+  ],
   "salasUsuario": [],
   "users": [],
   "login": [
     {
       "nomeUser": "a",
-      "email": "a@gmail.com",
-      "id": "nYUWXAlrL-A",
-      "senha": "a"
-    },
-    {
-      "nomeUser": "a",
-      "email": "a@gmail.com",
-      "id": "epqZHFbxJ4g",
-      "senha": "a"
-    },
-    {
-      "nomeUser": "a",
-      "email": "a@gmail.com",
-      "id": "o2LqpLKLGeA",
-      "senha": "a"
-    },
-    {
-      "nomeUser": "a",
-      "email": "a@gmail.com",
-      "id": "wByAeD8wD8E",
-      "senha": "a"
-    },
-    {
-      "nomeUser": "a",
-      "email": "a@gmail.com",
-      "id": "8SJrY0fXtTQ",
+      "email": "clarakellermanndossantos@gmail.com",
+      "id": "vlfgX1NN0BA",
       "senha": "a"
     }
   ],

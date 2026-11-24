@@ -1,159 +1,130 @@
 <script setup>
-import { ref, watch } from 'vue'
-import { users } from '@/views/user/Users'
-import { pegarIDUsuario } from '@/views/account/login/UserReal'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import ButtonChild from '@/components/ButtonChild.vue'
+import { loginOut } from '../account/login/Loginout'
 
-const meuid = pegarIDUsuario()
+const router = useRouter()
+const API_URL = 'http://localhost:3000'
 
-function sincronizarUsuarioGlobal(campo, valor) {
-  const usuarioMemoria = users.find((u) => Number(u.id) === Number(meuid))
-  if (usuarioMemoria) {
-    usuarioMemoria[campo] = valor
-  }
-  const usuariosSalvos = JSON.parse(localStorage.getItem('usuarios_cadastrados') || '[]')
-  const usuarioSalvo = usuariosSalvos.find((u) => Number(u.id) === Number(meuid))
-
-  if (usuarioSalvo) {
-    usuarioSalvo[campo] = valor
-    localStorage.setItem('usuarios_cadastrados', JSON.stringify(usuariosSalvos))
-  }
-}
-
-const nomeUsuario = ref(localStorage.getItem('user_nome') || '')
-const desc = ref(localStorage.getItem('desc') || '')
-
-watch(nomeUsuario, (novoNome) => {
-  localStorage.setItem('user_nome', novoNome)
-  sincronizarUsuarioGlobal('nome', novoNome)
+const usuario = ref({
+  id: '',
+  nome: '',
+  desc: '',
+  mostrarSala: 'sim',
+  pfp: '/pfpPlaceholder.png',
+  banner: '/bannerPlaceholder.png'
 })
 
-watch(desc, (novaDesc) => {
-  localStorage.setItem('desc', novaDesc)
-  sincronizarUsuarioGlobal('desc', novaDesc)
-})
-
-const urlFoto = ref(localStorage.getItem('urlFoto') || '/pfpPlaceholder.png')
-const urlBanner = ref(localStorage.getItem('urlBanner') || '/bannerPlaceholder.png')
-
-let novaFoto = ref(null)
-let novoBanner = ref(null)
-
-function mudarFoto(event) {
-  novaFoto.value = event.target.files[0]
-
-  if (novaFoto.value) {
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      urlFoto.value = reader.result
-      localStorage.setItem('urlFoto', reader.result)
-      sincronizarUsuarioGlobal('pfp', reader.result) 
+// Carrega o perfil usando o ID salvo no localStorage
+async function carregarPerfil() {
+  try {
+    const idLogado = localStorage.getItem('user_id')
+    
+    if (!idLogado) {
+      alert('Usuário não autenticado!')
+      router.push('/')
+      return
     }
 
-    reader.readAsDataURL(novaFoto.value)
-  }
-}
-
-function mudarBanner(event) {
-  novoBanner.value = event.target.files[0]
-
-  if (novoBanner.value) {
-    const reader = new FileReader()
-
-    reader.onload = () => {
-      urlBanner.value = reader.result
-      localStorage.setItem('urlBanner', reader.result)
-      sincronizarUsuarioGlobal('banner', reader.result)
+    const resposta = await fetch(`${API_URL}/users/${idLogado}`)
+    if (resposta.ok) {
+      usuario.value = await resposta.json()
     }
-
-    reader.readAsDataURL(novoBanner.value)
+  } catch (error) {
+    console.error('Erro ao carregar perfil:', error)
   }
 }
 
-const mostrarSala = ref(localStorage.getItem('mostrarSala?') || 'sim')
+// Atualiza o perfil usando o método PUT
+async function atualizarPerfil() {
+  try {
+    const idLogado = localStorage.getItem('user_id')
 
-watch(mostrarSala, (novoValor) => {
-  localStorage.setItem('mostrarSala?', novoValor)
-  sincronizarUsuarioGlobal('mostrarSala', novoValor)
-})
+    const resposta = await fetch(`${API_URL}/users/${idLogado}`, {
+      method: 'PUT', // ou PATCH dependendo da sua API
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(usuario.value),
+    })
+
+    if (resposta.ok) {
+      // Atualiza o nome salvo no localStorage se o usuário alterou
+      localStorage.setItem('user_nome', usuario.value.nome)
+      alert('Perfil atualizado com sucesso!')
+      router.push('/profile')
+      
+    } else {
+      alert('Erro ao atualizar perfil.')
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar:', error)
+  }
+}
+
+// Exclui o usuário da API
+async function excluirUser() {
+  if (confirm('Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.')) {
+    try {
+      const idLogado = localStorage.getItem('user_id')
+
+      await fetch(`${API_URL}/users/${idLogado}`, {
+        method: 'DELETE',
+      })
+      
+      localStorage.clear()
+      loginOut.value = 'inativo'
+      alert('Conta excluída com sucesso.')
+    
+      router.push('/')
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error)
+    }
+  }
+}
+
+onMounted(carregarPerfil)
 </script>
 
 <template>
   <div class="container">
-    <div class="cartaoPerfil">
-      <div class="adicionarFotoBanner">
-        <label for="fotoDeBanner" class="label-banner">
-          <img class="previewBanner" :src="urlBanner" alt="Preview" v-if="urlBanner" />
-          <span class="icone-lapis-banner"><font-awesome-icon icon="pen" /></span>
-        </label>
-
-        <input
-          type="file"
-          id="fotoDeBanner"
-          class="fotoBanner"
-          @change="mudarBanner"
-          accept="image/*"
-        />
-      </div>
-
-      <div class="adicionarFotoPerfil">
-        <label for="fotoDePerfil" class="label-foto">
-          <img class="previewFoto" :src="urlFoto" alt="Preview" v-if="urlFoto" />
-          <span class="icone-lapis-foto"><font-awesome-icon icon="pen" /></span>
-        </label>
-        <input
-          type="file"
-          id="fotoDePerfil"
-          class="fotoPerfil"
-          @change="mudarFoto"
-          accept="image/*"
-        />
-      </div>
-
+    <form class="cartaoPerfil" @submit.prevent="atualizarPerfil">
       <div class="campos">
         <div class="campo-grupo">
           <label>Nome de usuário</label>
-          <input
-            v-model="nomeUsuario"
-            class="nomeUsuario"
-            placeholder="Nome de usuário"
-            maxlength="25"
-          />
-          <span class="contador">{{ nomeUsuario ? nomeUsuario.length : 0 }}/25</span>
+          <input v-model="usuario.nome" placeholder="Nome de usuário" maxlength="25" required />
         </div>
+
         <div class="campo-grupo">
-          <label> Descrição </label>
-          <textarea
-            v-model="desc"
-            class="descricao"
-            placeholder="Escreva sobre você..."
-            maxlength="300"
-          ></textarea>
-          <span class="contador">{{ desc ? desc.length : 0 }}/300</span>
+          <label>Descrição</label>
+          <textarea v-model="usuario.desc" placeholder="Escreva sobre você..." maxlength="300"></textarea>
         </div>
 
         <div class="campo-grupo">
           <label>Mostrar Salas?</label>
           <div class="radios">
-            <div class="sim">
-              <input type="radio" name="mostrarSala?" value="sim" id="yes" v-model="mostrarSala" />
-              <label for="yes">Sim</label>
-            </div>
-            <div class="nao">
-              <input type="radio" name="mostrarSala?" value="nao" id="no" v-model="mostrarSala" />
-              <label for="no">Não</label>
-            </div>
+            <input type="radio" value="sim" id="yes" v-model="usuario.mostrarSala" />
+            <label for="yes">Sim</label>
+            <input type="radio" value="nao" id="no" v-model="usuario.mostrarSala" />
+            <label for="no">Não</label>
           </div>
         </div>
       </div>
 
-      <router-link to="/profile">
-        <button>Confirmar</button>
-      </router-link>
+      <div class="col-12 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Confirmar</button>
+      </div>
+    </form>
+
+    <div>
+      <!-- Corrigido para chamar a função diretamente sem $emit errado -->
+      <ButtonChild @clique="excluirUser" class="btn btn-danger">
+        Excluir Usuário
+      </ButtonChild>
     </div>
   </div>
 </template>
-
 <style scoped>
 .container {
   max-width: 800px;
