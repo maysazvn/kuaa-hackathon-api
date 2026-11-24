@@ -12,6 +12,8 @@
     "lint:eslint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/",
     "server": "npx json-server db.json"
+    "test": "echo \"Error: no test specified\" && exit 1", 
+    "api": "json-server db.json"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.3.0",
@@ -19,6 +21,7 @@
     "@fortawesome/free-regular-svg-icons": "^7.3.0",
     "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "@fortawesome/vue-fontawesome": "^3.3.0",
+    "json-server": "^1.0.0-beta.15",
     "vercel": "^59.20.0",
     "vue": "^3.5.38",
     "vue-router": "^5.1.0",
@@ -34,6 +37,7 @@
     "eslint-plugin-oxlint": "~1.69.0",
     "eslint-plugin-vue": "~10.9.2",
     "globals": "^17.6.0",
+    "json-server": "^1.0.0-beta.15",
     "npm-run-all2": "^9.0.2",
     "oxlint": "~1.69.0",
     "prettier": "3.8.4",
